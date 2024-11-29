@@ -1,13 +1,16 @@
 https://codeload.github.com/KurimuzonAkuma/pyrogram/zip/refs/heads/dev
+pyrogram
 TgCrypto
 pyromod
 pymongo
+motor
+umongo
 dnspython
+marshmallow
 aiohttp
 pytz
 requests
 bs4
 shortzy
-aiohttp
 aiofiles
 asyncio
