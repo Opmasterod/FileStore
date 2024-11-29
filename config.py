@@ -2,55 +2,50 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
-
-
 #Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")
-
-#Your API ID from my.telegram.org
-APP_ID = int(os.environ.get("APP_ID", ""))
-
-#Your API Hash from my.telegram.org
-API_HASH = os.environ.get("API_HASH", "")
-
-#Your db channel Id
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1001995978690"))
-
-# NAMA OWNER
-OWNER = os.environ.get("OWNER", "sewxiy")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "6361809314:AAE7YAaluXK2F6J9M4aPtKlJo0dvCkUMdwQ")
+APP_ID = int(os.environ.get("APP_ID", "23713783"))
+API_HASH = os.environ.get("API_HASH", "2daa157943cb2d76d149c4de0b036a99")
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1002167713134"))
 
 #OWNER ID
-OWNER_ID = int(os.environ.get("OWNER_ID", "6497757690"))
+OWNER_ID = int(os.environ.get("OWNER_ID", "5487643307"))
+PORT = os.environ.get("PORT", "8080")
 
-#Port
-PORT = os.environ.get("PORT", "8030")
-
-#Database
-DB_URI = os.environ.get("DATABASE_URL", "")
+#Database 
+DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://namanjain123eudhc:opmaster@cluster0.5iokvxo.mongodb.net/?retryWrites=true&w=majority")
 DB_NAME = os.environ.get("DATABASE_NAME", "Cluster0")
 
+#Shortner (token system) 
+
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "instantearn.in")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "7e372e1221f5c6173180746099cb4c580ef42a12")
+VERIFY_EXPIRE = int(os.environ.get('VERIFY_EXPIRE', 108000)) # Add time in seconds
+IS_VERIFY = os.environ.get("IS_VERIFY", "True")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/hotousebotes/5") 
+
 #force sub channel id, if you want enable force sub
-FORCE_SUB_CHANNEL = int(os.environ.get("FORCE_SUB_CHANNEL", "-1001473043276"))
-FORCE_SUB_CHANNEL2 = int(os.environ.get("FORCE_SUB_CHANNEL2", "-1001644866777"))
+FORCE_SUB_CHANNEL = int(os.environ.get("FORCE_SUB_CHANNEL", "-1002386698373"))
+FORCE_SUB_CHANNEL2 = int(os.environ.get("FORCE_SUB_CHANNEL2", "-1002491351838"))
 
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "4"))
 
-FILE_AUTO_DELETE = int(os.getenv("FILE_AUTO_DELETE", "10")) # auto delete in seconds
-
+#Time in seconds for message delete, put 0 to never delete
+TIME = int(os.environ.get("TIME", "3600"))
 #start message
-START_MSG = os.environ.get("START_MESSAGE", "<b>ʙᴀᴋᴋᴀᴀᴀ!! {first}\n\n ɪ ᴀᴍ ғɪʟᴇ sᴛᴏʀᴇ ʙᴏᴛ, ɪ ᴄᴀɴ sᴛᴏʀᴇ ᴘʀɪᴠᴀᴛᴇ ғɪʟᴇs ɪɴ sᴘᴇᴄɪғɪᴇᴅ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴏᴛʜᴇʀ ᴜsᴇʀs ᴄᴀɴ ᴀᴄᴄᴇss ɪᴛ ғʀᴏᴍ sᴘᴇᴄɪᴀʟ ʟɪɴᴋ.</b>")
+START_MSG = os.environ.get("START_MESSAGE", "Hello {first}, Thanks to use me and check below buttons ❤")
 try:
-    ADMINS=[6376328008]
-    for x in (os.environ.get("ADMINS", "5115691197 6273945163 6103092779 5231212075").split()):
+    ADMINS=[]
+    for x in (os.environ.get("ADMINS", "6497757690 7328629001").split()):
         ADMINS.append(int(x))
 except ValueError:
         raise Exception("Your Admins list does not contain valid integers.")
 
 #Force sub message 
-FORCE_MSG = os.environ.get("FORCE_SUB_MESSAGE", "<b>ʜᴇʟʟᴏ {first}\nᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʜᴇɴ ᴄʟɪᴄᴋ ᴏɴ ʀᴇʟᴏᴀᴅ button ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛᴇᴅ ꜰɪʟᴇ.</b>")
+FORCE_MSG = os.environ.get("FORCE_SUB_MESSAGE", "ʜᴇʟʟᴏ {first}\n\n<b>ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴛʜᴇɴ ᴄʟɪᴄᴋ ᴏɴ ʀᴇʟᴏᴀᴅ button ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛᴇᴅ ꜰɪʟᴇ.</b>")
 
 #set your Custom Caption here, Keep None for Disable Custom Caption
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @OtakuFlix_Network</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "")
 
 #set True if you want to prevent users from forwarding files from bot
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "False") == "True" else False
@@ -84,4 +79,3 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 def LOGGER(name: str) -> logging.Logger:
     return logging.getLogger(name)
-   
