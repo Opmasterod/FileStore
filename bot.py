@@ -1,19 +1,16 @@
 from aiohttp import web
 from plugins import web_server
-
 import pyromod.listen
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 import sys
 from datetime import datetime
-
 from config import API_HASH, APP_ID, LOGGER, TG_BOT_TOKEN, TG_BOT_WORKERS, FORCE_SUB_CHANNEL, FORCE_SUB_CHANNEL2, CHANNEL_ID, PORT
 
 
-name ="""
+name = """
  BY CODEFLIX BOTS
 """
-
 
 class Bot(Client):
     def __init__(self):
@@ -34,36 +31,50 @@ class Bot(Client):
         usr_bot_me = await self.get_me()
         self.uptime = datetime.now()
 
-        if FORCE_SUB_CHANNEL:
+        # Handle FORCE_SUB_CHANNEL and FORCE_SUB_CHANNEL2
+        await self._check_force_sub_channel(FORCE_SUB_CHANNEL)
+        await self._check_force_sub_channel(FORCE_SUB_CHANNEL2)
+
+        # Check DB channel access
+        await self._check_db_channel_access()
+
+        self.set_parse_mode(ParseMode.HTML)
+        self.LOGGER(__name__).info(f"Bot Running..!\n\nCreated by \nhttps://t.me/weebs_support")
+        self.LOGGER(__name__).info(f"""       
+  ___ ___  ___  ___ ___ _    _____  _____  ___ _____ ___ 
+ / __/ _ \|   \| __| __| |  |_ _\ \/ / _ )/ _ \_   _/ __|
+| (_| (_) | |) | _|| _|| |__ | | >  <| _ \ (_) || | \__ \
+ \___\___/|___/|___|_| |____|___/_/\_\___/\___/ |_| |___/
+                                                         
+                                          """)
+        self.username = usr_bot_me.username
+        
+        # Start the web server
+        app = web.AppRunner(await web_server())
+        await app.setup()
+        bind_address = "0.0.0.0"
+        await web.TCPSite(app, bind_address, PORT).start()
+
+    async def _check_force_sub_channel(self, force_sub_channel):
+        if force_sub_channel:
             try:
-                link = (await self.get_chat(FORCE_SUB_CHANNEL)).invite_link
+                link = (await self.get_chat(force_sub_channel)).invite_link
                 if not link:
-                    await self.export_chat_invite_link(FORCE_SUB_CHANNEL)
-                    link = (await self.get_chat(FORCE_SUB_CHANNEL)).invite_link
-                self.invitelink = link
+                    await self.export_chat_invite_link(force_sub_channel)
+                    link = (await self.get_chat(force_sub_channel)).invite_link
+                setattr(self, f"invitelink{force_sub_channel}", link)
             except Exception as a:
                 self.LOGGER(__name__).warning(a)
-                self.LOGGER(__name__).warning("Bot can't Export Invite link from Force Sub Channel!")
-                self.LOGGER(__name__).warning(f"Please Double check the FORCE_SUB_CHANNEL value and Make sure Bot is Admin in channel with Invite Users via Link Permission, Current Force Sub Channel Value: {FORCE_SUB_CHANNEL}")
+                self.LOGGER(__name__).warning(f"Bot can't Export Invite link from Force Sub Channel {force_sub_channel}!")
+                self.LOGGER(__name__).warning(f"Please Double check the FORCE_SUB_CHANNEL value and Make sure Bot is Admin in channel with Invite Users via Link Permission.")
                 self.LOGGER(__name__).info("\nBot Stopped. https://t.me/weebs_support for support")
                 sys.exit()
-        if FORCE_SUB_CHANNEL2:
-            try:
-                link = (await self.get_chat(FORCE_SUB_CHANNEL2)).invite_link
-                if not link:
-                    await self.export_chat_invite_link(FORCE_SUB_CHANNEL2)
-                    link = (await self.get_chat(FORCE_SUB_CHANNEL2)).invite_link
-                self.invitelink2 = link
-            except Exception as a:
-                self.LOGGER(__name__).warning(a)
-                self.LOGGER(__name__).warning("Bot can't Export Invite link from Force Sub Channel!")
-                self.LOGGER(__name__).warning(f"Please Double check the FORCE_SUB_CHANNEL2 value and Make sure Bot is Admin in channel with Invite Users via Link Permission, Current Force Sub Channel Value: {FORCE_SUB_CHANNEL2}")
-                self.LOGGER(__name__).info("\nBot Stopped. https://t.me/weebs_support for support")
-                sys.exit()
+
+    async def _check_db_channel_access(self):
         try:
             db_channel = await self.get_chat(CHANNEL_ID)
             self.db_channel = db_channel
-            test = await self.send_message(chat_id = db_channel.id, text = "Test Message")
+            test = await self.send_message(chat_id=db_channel.id, text="Test Message")
             await test.delete()
         except Exception as e:
             self.LOGGER(__name__).warning(e)
@@ -71,26 +82,6 @@ class Bot(Client):
             self.LOGGER(__name__).info("\nBot Stopped. Join https://t.me/weebs_support for support")
             sys.exit()
 
-        self.set_parse_mode(ParseMode.HTML)
-        self.LOGGER(__name__).info(f"Bot Running..!\n\nCreated by \nhttps://t.me/weebs_support")
-        self.LOGGER(__name__).info(f"""       
-
-
-  ___ ___  ___  ___ ___ _    _____  _____  ___ _____ ___ 
- / __/ _ \|   \| __| __| |  |_ _\ \/ / _ )/ _ \_   _/ __|
-| (_| (_) | |) | _|| _|| |__ | | >  <| _ \ (_) || | \__ \
- \___\___/|___/|___|_| |____|___/_/\_\___/\___/ |_| |___/
-                                                         
- 
-                                          """)
-        self.username = usr_bot_me.username
-        #web-response
-        app = web.AppRunner(await web_server())
-        await app.setup()
-        bind_address = "0.0.0.0"
-        await web.TCPSite(app, bind_address, PORT).start()
-
     async def stop(self, *args):
         await super().stop()
         self.LOGGER(__name__).info("Bot stopped.")
-            
