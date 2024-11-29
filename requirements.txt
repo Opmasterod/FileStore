@@ -4,3 +4,10 @@ pyromod
 pymongo
 dnspython
 aiohttp
+pytz
+requests
+bs4
+shortzy
+aiohttp
+aiofiles
+asyncio
