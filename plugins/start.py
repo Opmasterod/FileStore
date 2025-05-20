@@ -64,7 +64,7 @@ async def short_url(client: Client, message: Message, base64_string):
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
     id = message.from_user.id
-    is_premium = await db.is_premium_user(id)
+    is_premium = db.is_premium_user(id)
 
     # Check if user is banned
     banned_users = await db.get_ban_users()
