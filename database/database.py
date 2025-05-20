@@ -90,20 +90,16 @@ class Rohit:
         user_data.delete_one({'_id': user_id})
 
 
-    async def add_premium_user(user_id: int, duration: int) -> None:
- #   """
- #   Add a user as premium with an expiration time (duration in seconds from command time).
- #   Stores expiration_time as current timestamp + duration.
- #   """
+    async def add_premium_user(self, user_id: int, duration: int, extra_arg=None) -> None:
         expiration_time = int(time.time()) + duration
-        premium_users.update_one(
+        await self.premium_users.update_one(
             {'_id': user_id},
-            {'$set': {'expiration_time': expiration_time}},
+            {'$set': {'expiration_time': expiration_time, 'extra': extra_arg}},
             upsert=True
         )
-        print(f"Added premium for user {user_id}: expiration_time={expiration_time}")
+        print(f"Added premium for user {user_id}: expiration_time={expiration_time}, extra={extra_arg}")
 
-    async def add_all_premium(duration: int) -> None:
+    async def add_all_premium(self, duration: int, extra_arg=None) -> None:
  #   """
   #  Set all users as premium for the specified duration (in seconds from command time).
   #  Stores a global expiration time for 'All' users.
@@ -116,14 +112,14 @@ class Rohit:
         )
         print(f"Added All premium: expiration_time={expiration_time}")
 
-    async def remove_premium_user(user_id: int) -> None:
+    async def remove_premium_user(self, user_id: int, extra_arg=None) -> None:
   #  """
  #   Remove a user's premium status.
  #   """
         premium_users.delete_one({'_id': user_id})
         print(f"Removed premium for user {user_id}")
 
-    async def is_premium_user(user_id: int) -> Tuple[bool, int]:
+    async def is_premium_user(self, user_id: int, extra_arg=None) -> Tuple[bool, int]:
   #  """
   #  Check if a user is premium by comparing current time to expiration time.
   #  Returns (is_premium, remaining_time).
