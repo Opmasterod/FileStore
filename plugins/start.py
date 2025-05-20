@@ -28,7 +28,6 @@ from bot import Bot
 from config import *
 from helper_func import *
 from database.database import *
-from database.database import present_user, premium_users, is_premium_user, add_premium_user, add_all_premium, remove_premium_user, list_premium_users
 from database.db_premium import *
 
 
