@@ -53,6 +53,7 @@ class Rohit:
         self.fsub_data = self.database['fsub']   
         self.rqst_fsub_data = self.database['request_forcesub']
         self.rqst_fsub_Channel_data = self.database['request_forcesub_channel']
+        self.premium_users = self.database['premium_users']
         
 
 
@@ -105,7 +106,7 @@ class Rohit:
   #  Stores a global expiration time for 'All' users.
   #  """
         expiration_time = int(time.time()) + duration
-        premium_users.update_one(
+        await self.premium_users.update_one(
             {'_id': 'All'},
             {'$set': {'expiration_time': expiration_time}},
             upsert=True
@@ -116,7 +117,7 @@ class Rohit:
   #  """
  #   Remove a user's premium status.
  #   """
-        premium_users.delete_one({'_id': user_id})
+        await self.premium_users.delete_one({'_id': user_id})
         print(f"Removed premium for user {user_id}")
 
     async def is_premium_user(self, user_id: int, extra_arg=None) -> Tuple[bool, int]:
