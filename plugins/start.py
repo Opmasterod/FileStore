@@ -408,7 +408,7 @@ async def add_premium_command(client: Client, message: Message):
             if not await db.present_user(user_id):
                 await message.reply_text(f"User {user_id} not found in database")
                 return
-            await add_premium_user(user_id, time_seconds)
+            await db.add_premium_user(user_id, time_seconds)
             await message.reply_text(f"User {user_id} set as premium for {time_seconds} seconds")
     except (IndexError, ValueError) as e:
         await message.reply_text(f"Error: {str(e)}. Usage: /addpremium {user_id} {time_in_seconds} or /addpremium All {time_in_seconds}")
