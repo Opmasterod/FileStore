@@ -64,7 +64,7 @@ async def short_url(client: Client, message: Message, base64_string):
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
     id = message.from_user.id
-    is_premium = await is_premium_user(id)
+    is_premium = await db.is_premium_user(id)
 
     # Check if user is banned
     banned_users = await db.get_ban_users()
@@ -114,7 +114,7 @@ async def start_command(client: Client, message: Message):
             if string.startswith("get-HACKHEIST-"):
                 is_new_format = True
                 # Check premium status
-                is_premium, remaining_time = await is_premium_user(id)
+                is_premium, remaining_time = await db.is_premium_user(id)
                 current_time = int(time.time())
                 if is_premium:
                     await message.reply_text("𝐘𝐨𝐮 𝐚𝐫𝐞 𝐚 𝐏𝐫𝐞𝐦𝐢𝐮𝐦 𝐔𝐬𝐞𝐫 🥰")
@@ -401,11 +401,11 @@ async def add_premium_command(client: Client, message: Message):
             return
 
         if args[0].lower() == "all":
-            await add_all_premium(time_seconds)
+            await db.add_all_premium(time_seconds)
             await message.reply_text(f"All users set as premium for {time_seconds} seconds")
         else:
             user_id = int(args[0])
-            if not await present_user(user_id):
+            if not await db.present_user(user_id):
                 await message.reply_text(f"User {user_id} not found in database")
                 return
             await add_premium_user(user_id, time_seconds)
@@ -417,14 +417,14 @@ async def add_premium_command(client: Client, message: Message):
 async def remove_premium_command(client: Client, message: Message):
     try:
         user_id = int(message.text.split(" ", 1)[1])
-        await remove_premium_user(user_id)
+        await db.remove_premium_user(user_id)
         await message.reply_text(f"Premium status removed for user {user_id}")
     except (IndexError, ValueError) as e:
         await message.reply_text(f"Error: {str(e)}. Usage: /removepremium {user_id}")
 
 @Bot.on_message(filters.command('listpremiumusers') & filters.private & admin)
 async def list_premium_users_command(client: Client, message: Message):
-    premium_list = await list_premium_users()
+    premium_list = await db.list_premium_users()
     if not premium_list:
         await message.reply_text("No premium users found")
         return
