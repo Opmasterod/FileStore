@@ -114,13 +114,13 @@ async def start_command(client: Client, message: Message):
             if string.startswith("get-HACKHEIST-"):
                 is_new_format = True
                 # Check premium status
-                is_premium, remaining_time = db.is_premium_user(id)
+                is_premium, remaining_time = await db.is_premium_user(id)
                 current_time = int(time.time())
                 if is_premium:
                     await message.reply_text("𝐘𝐨𝐮 𝐚𝐫𝐞 𝐚 𝐏𝐫𝐞𝐦𝐢𝐮𝐦 𝐔𝐬𝐞𝐫 🥰")
                 else:
                     # Check if user was previously premium (has an expired entry)
-                    user_doc = premium_users.find_one({'_id': id})
+                    user_doc = await db.premium_users.find_one({'_id': id})
                     if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
                         await message.reply_text(f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲" 
                                                  f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ")
