@@ -114,7 +114,7 @@ async def start_command(client: Client, message: Message):
             if string.startswith("get-HACKHEIST-"):
                 is_new_format = True
                 # Check premium status
-                is_premium, remaining_time = await db.is_premium_user(id)
+                is_premium, remaining_time = db.is_premium_user(id)
                 current_time = int(time.time())
                 if is_premium:
                     await message.reply_text("𝐘𝐨𝐮 𝐚𝐫𝐞 𝐚 𝐏𝐫𝐞𝐦𝐢𝐮𝐦 𝐔𝐬𝐞𝐫 🥰")
@@ -424,7 +424,7 @@ async def remove_premium_command(client: Client, message: Message):
 
 @Bot.on_message(filters.command('listpremiumusers') & filters.private & admin)
 async def list_premium_users_command(client: Client, message: Message):
-    premium_list = await db.list_premium_users()
+    premium_list = db.list_premium_users()
     if not premium_list:
         await message.reply_text("No premium users found")
         return
