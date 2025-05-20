@@ -22,6 +22,8 @@ TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8154426339:")
 APP_ID = int(os.environ.get("APP_ID", "")) #Your API ID from my.telegram.org
 API_HASH = os.environ.get("API_HASH", "") #Your API Hash from my.telegram.org
 #--------------------------------------------
+WEBSITE_URL_MODE = os.environ.get("WEBSITE_URL_MODE", "True")
+WEBSITE_URL = os.environ.get("WEBSITE_URL", "https://hackheistop1.blogspot.com/2024/12/1st-try.html")
 
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1002170811388")) #Your db channel Id
 OWNER = os.environ.get("OWNER", "sewxiy") # Owner username without @
