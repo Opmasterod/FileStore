@@ -4,6 +4,7 @@
 import motor, asyncio
 import motor.motor_asyncio
 import time
+from typing import Tuple
 import pymongo, os
 from config import DB_URI, DB_NAME
 import logging
