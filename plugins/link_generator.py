@@ -103,7 +103,7 @@ async def custom_batch(client: Client, message: Message):
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("🔁 Share URL", url=f'https://telegram.me/share/url?url={link}')]])
     await message.reply(f"<b>Here is your custom batch link:</b>\n\n{link}", reply_markup=reply_markup)
 
-@Bot.on_message(filters.private & filters.user(ADMINS) & filters.command('nbatch'))
+@Bot.on_message(filters.private & admin & filters.command('nbatch'))
 async def new_batch(client: Client, message: Message):
     while True:
         try:
