@@ -122,11 +122,21 @@ async def start_command(client: Client, message: Message):
                     # Check if user was previously premium (has an expired entry)
                     user_doc = await db.premium_users.find_one({'_id': id})
                     if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
-                        await message.reply_text(f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲" 
-                                                 f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ")
+                        await message.reply_text(
+                            f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲" 
+                            f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ",
+                            reply_markup=InlineKeyboardMarkup(
+                                [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
+                            )
+                            )
                     else:
-                        await message.reply_text(f"<b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b>"
-                                                 f"Contact for buy")
+                        await message.reply_text(
+                            f"<b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b>\n"
+                            f"Contact for buy",
+                            reply_markup=InlineKeyboardMarkup(
+                                [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
+                            )
+                            )
                     return
                 try:
                     f_msg_id, s_msg_id = await decode_link(base64_string)
