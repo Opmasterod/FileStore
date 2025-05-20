@@ -57,22 +57,33 @@ class Rohit:
 
 
     # USER DATA
-    async def present_user(self, user_id: int):
-        found = await self.user_data.find_one({'_id': user_id})
+    async def present_user(user_id: int) -> bool:
+#    """
+  #  Check if a user exists in the users collection.
+ #   """
+        found = user_data.find_one({'_id': user_id})
         return bool(found)
 
-    async def add_user(self, user_id: int):
-        await self.user_data.insert_one({'_id': user_id})
-        return
+    async def add_user(user_id: int) -> None:
+   # """
+   # Add a user to the users collection.
+  #  """
+        user_data.insert_one({'_id': user_id})
 
-    async def full_userbase(self):
-        user_docs = await self.user_data.find().to_list(length=None)
+    async def full_userbase() -> list:
+   # """
+ #   Get all user IDs from the users collection.
+#    """
+        user_docs = user_data.find()
         user_ids = [doc['_id'] for doc in user_docs]
         return user_ids
 
-    async def del_user(self, user_id: int):
-        await self.user_data.delete_one({'_id': user_id})
-        return
+    async def del_user(user_id: int) -> None:
+#    """
+#    Delete a user from the users collection.
+#    """
+        user_data.delete_one({'_id': user_id})
+
 
     async def add_premium_user(user_id: int, duration: int) -> None:
  #   """
