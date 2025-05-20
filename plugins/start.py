@@ -387,7 +387,7 @@ async def check_plan(client: Client, message: Message):
     await message.reply(status_message)
 
 #=====================================================================================##
-@Bot.on_message(filters.command('addpremium') & filters.private & filters.user(ADMINS))
+@Bot.on_message(filters.command('addpremium') & filters.private & admin)
 async def add_premium_command(client: Client, message: Message):
     try:
         args = message.text.split(" ", 2)[1:]
@@ -413,7 +413,7 @@ async def add_premium_command(client: Client, message: Message):
     except (IndexError, ValueError) as e:
         await message.reply_text(f"Error: {str(e)}. Usage: /addpremium {user_id} {time_in_seconds} or /addpremium All {time_in_seconds}")
 
-@Bot.on_message(filters.command('removepremium') & filters.private & filters.user(ADMINS))
+@Bot.on_message(filters.command('removepremium') & filters.private & admin)
 async def remove_premium_command(client: Client, message: Message):
     try:
         user_id = int(message.text.split(" ", 1)[1])
@@ -422,7 +422,7 @@ async def remove_premium_command(client: Client, message: Message):
     except (IndexError, ValueError) as e:
         await message.reply_text(f"Error: {str(e)}. Usage: /removepremium {user_id}")
 
-@Bot.on_message(filters.command('listpremiumusers') & filters.private & filters.user(ADMINS))
+@Bot.on_message(filters.command('listpremiumusers') & filters.private & admin)
 async def list_premium_users_command(client: Client, message: Message):
     premium_list = await list_premium_users()
     if not premium_list:
