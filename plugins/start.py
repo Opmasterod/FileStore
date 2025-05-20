@@ -93,72 +93,135 @@ async def start_command(client: Client, message: Message):
 
     # Handle normal message flow
     text = message.text
-
     if len(text) > 7:
         try:
-            basic = text.split(" ", 1)[1]
-            if basic.startswith("yu3elk"):
-                base64_string = basic[6:-1]
+            base64_string = text.split(" ", 1)[1]
+            # Handle WEBSITE_URL_MODE HACKHEIST parameter
+            if base64_string.startswith("HACKHEIST="):
+                base64_string = base64_string.split("HACKHEIST=", 1)[1]
+            await message.reply_text(f"Processing link with base64: {base64_string}")
+        except IndexError:
+            await message.reply_text("Welcome to the bot!")
+            return
+        
+        # Try decoding the string
+        is_new_format = False
+        try:
+            string = await decode(base64_string)
+            await message.reply_text(f"Decoded string: {string}")
+            
+            # Check for new format: get-HACKHEIST_{f_encoded}-{s_encoded}
+            if string.startswith("get-HACKHEIST-"):
+                is_new_format = True
+                # Check premium status
+                is_premium, remaining_time = await is_premium_user(id)
+                current_time = int(time.time())
+                if is_premium:
+                    await message.reply_text("𝐘𝐨𝐮 𝐚𝐫𝐞 𝐚 𝐏𝐫𝐞𝐦𝐢𝐮𝐦 𝐔𝐬𝐞𝐫 🥰")
+                else:
+                    # Check if user was previously premium (has an expired entry)
+                    user_doc = premium_users.find_one({'_id': id})
+                    if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
+                        await message.reply_text(f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲" 
+                                                 f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ")
+                    else:
+                        await message.reply_text(f"<b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b>"
+                                                 f"Contact for buy")
+                    return
+                try:
+                    f_msg_id, s_msg_id = await decode_link(base64_string)
+                    await message.reply_text(f"New format decoded: {f_msg_id}, {s_msg_id}")
+                    if f_msg_id <= s_msg_id:
+                        ids = range(f_msg_id, s_msg_id + 1)
+                    else:
+                        ids = []
+                        i = f_msg_id
+                        while True:
+                            ids.append(i)
+                            i -= 1
+                            if i < s_msg_id:
+                                break
+                except ValueError as e:
+                    await message.reply_text(f"Error parsing new format: {str(e)}")
+                    return
             else:
-                base64_string = basic
+                # Process old format: get-{f_msg_id * abs(client.db_channel.id)}-{s_msg_id * abs(client.db_channel.id)}
+                argument = string.split("-")
+                if len(argument) == 3:
+                    try:
+                        start = int(int(argument[1]) / abs(client.db_channel.id))
+                        end = int(int(argument[2]) / abs(client.db_channel.id))
+                        await message.reply_text(f"Old format IDs: {start} to {end}")
+                    except (ValueError, IndexError) as e:
+                        await message.reply_text(f"Error parsing old format: {str(e)}")
+                        return
+                    if start <= end:
+                        ids = range(start, end + 1)
+                    else:
+                        ids = []
+                        i = start
+                        while True:
+                            ids.append(i)
+                            i -= 1
+                            if i < end:
+                                break
+                elif len(argument) == 2:
+                    try:
+                        ids = [int(int(argument[1]) / abs(client.db_channel.id))]
+                        await message.reply_text(f"Old format single ID: {ids[0]}")
+                    except (ValueError, IndexError) as e:
+                        await message.reply_text(f"Error parsing old format single ID: {str(e)}")
+                        return
+                else:
+                    await message.reply_text("Invalid old format structure")
+                    return
+        except ValueError as e:
+            await message.reply_text(f"Failed to decode string: {str(e)}")
+            return
 
-            if not is_premium and user_id != OWNER_ID and not basic.startswith("yu3elk"):
-                await short_url(client, message, base64_string)
-                return
-
-        except Exception as e:
-            print(f"Error processing start payload: {e}")
-
-        string = await decode(base64_string)
-        argument = string.split("-")
-
-        ids = []
-        if len(argument) == 3:
-            try:
-                start = int(int(argument[1]) / abs(client.db_channel.id))
-                end = int(int(argument[2]) / abs(client.db_channel.id))
-                ids = range(start, end + 1) if start <= end else list(range(start, end - 1, -1))
-            except Exception as e:
-                print(f"Error decoding IDs: {e}")
-                return
-
-        elif len(argument) == 2:
-            try:
-                ids = [int(int(argument[1]) / abs(client.db_channel.id))]
-            except Exception as e:
-                print(f"Error decoding ID: {e}")
-                return
-
-        temp_msg = await message.reply("<b>Please wait...</b>")
+        temp_msg = await message.reply("Wait A Second...")
         try:
             messages = await get_messages(client, ids)
+            await temp_msg.edit("Messages fetched successfully!")
         except Exception as e:
-            await message.reply_text("Something went wrong!")
-            print(f"Error getting messages: {e}")
+            await temp_msg.edit(f"Something went wrong: {str(e)}")
             return
-        finally:
-            await temp_msg.delete()
+        await temp_msg.delete()
 
-        codeflix_msgs = []
         for msg in messages:
-            caption = (CUSTOM_CAPTION.format(previouscaption="" if not msg.caption else msg.caption.html, 
-                                             filename=msg.document.file_name) if bool(CUSTOM_CAPTION) and bool(msg.document)
-                       else ("" if not msg.caption else msg.caption.html))
+            if bool(CUSTOM_CAPTION) & bool(msg.document):
+                caption = CUSTOM_CAPTION.format(previouscaption="" if not msg.caption else msg.caption.html, filename=msg.document.file_name)
+            else:
+                caption = "" if not msg.caption else msg.caption.html
 
-            reply_markup = msg.reply_markup if DISABLE_CHANNEL_BUTTON else None
+            if DISABLE_CHANNEL_BUTTON:
+                reply_markup = msg.reply_markup
+            else:
+                reply_markup = None
 
             try:
-                copied_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, 
-                                            reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
-                codeflix_msgs.append(copied_msg)
+                # Use protect_content=True for new format, PROTECT_CONTENT for old format
+                protect_content = True if is_new_format else PROTECT_CONTENT
+                await msg.copy(
+                    chat_id=message.from_user.id,
+                    caption=caption,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=reply_markup,
+                    protect_content=protect_content
+                )
+                await asyncio.sleep(0.5)
             except FloodWait as e:
                 await asyncio.sleep(e.x)
-                copied_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, 
-                                            reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
-                codeflix_msgs.append(copied_msg)
+                await msg.copy(
+                    chat_id=message.from_user.id,
+                    caption=caption,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=reply_markup,
+                    protect_content=protect_content
+                )
             except Exception as e:
-                print(f"Failed to send message: {e}")
-                pass
+                await message.reply_text(f"Error copying message: {str(e)}")
+        pass
 
         if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
@@ -324,8 +387,57 @@ async def check_plan(client: Client, message: Message):
     await message.reply(status_message)
 
 #=====================================================================================##
+@Bot.on_message(filters.command('addpremium') & filters.private & filters.user(ADMINS))
+async def add_premium_command(client: Client, message: Message):
+    try:
+        args = message.text.split(" ", 2)[1:]
+        if len(args) < 2:
+            await message.reply_text("Usage: /addpremium {user_id} {time_in_seconds} or /addpremium All {time_in_seconds}")
+            return
+        
+        time_seconds = int(args[1])
+        if time_seconds <= 0:
+            await message.reply_text("Time must be a positive number of seconds")
+            return
+
+        if args[0].lower() == "all":
+            await add_all_premium(time_seconds)
+            await message.reply_text(f"All users set as premium for {time_seconds} seconds")
+        else:
+            user_id = int(args[0])
+            if not await present_user(user_id):
+                await message.reply_text(f"User {user_id} not found in database")
+                return
+            await add_premium_user(user_id, time_seconds)
+            await message.reply_text(f"User {user_id} set as premium for {time_seconds} seconds")
+    except (IndexError, ValueError) as e:
+        await message.reply_text(f"Error: {str(e)}. Usage: /addpremium {user_id} {time_in_seconds} or /addpremium All {time_in_seconds}")
+
+@Bot.on_message(filters.command('removepremium') & filters.private & filters.user(ADMINS))
+async def remove_premium_command(client: Client, message: Message):
+    try:
+        user_id = int(message.text.split(" ", 1)[1])
+        await remove_premium_user(user_id)
+        await message.reply_text(f"Premium status removed for user {user_id}")
+    except (IndexError, ValueError) as e:
+        await message.reply_text(f"Error: {str(e)}. Usage: /removepremium {user_id}")
+
+@Bot.on_message(filters.command('listpremiumusers') & filters.private & filters.user(ADMINS))
+async def list_premium_users_command(client: Client, message: Message):
+    premium_list = await list_premium_users()
+    if not premium_list:
+        await message.reply_text("No premium users found")
+        return
+    
+    response = "Premium Users:\n"
+    for user_id, remaining_time in premium_list:
+        if user_id == "All":
+            response += f"All users: {remaining_time} seconds remaining\n"
+        else:
+            response += f"User {user_id}: {remaining_time} seconds remaining\n"
+    await message.reply_text(response)
 # Command to add premium user
-@Bot.on_message(filters.command('addpremium') & filters.private & admin)
+@Bot.on_message(filters.command('addpremiumopp') & filters.private & admin)
 async def add_premium_user_command(client, msg):
     if len(msg.command) != 4:
         await msg.reply_text(
@@ -375,7 +487,7 @@ async def add_premium_user_command(client, msg):
 
 
 # Command to remove premium user
-@Bot.on_message(filters.command('remove_premium') & filters.private & admin)
+@Bot.on_message(filters.command('remove_premiums') & filters.private & admin)
 async def pre_remove_user(client: Client, msg: Message):
     if len(msg.command) != 2:
         await msg.reply_text("useage: /remove_premium user_id ")
@@ -389,7 +501,7 @@ async def pre_remove_user(client: Client, msg: Message):
 
 
 # Command to list active premium users
-@Bot.on_message(filters.command('premium_users') & filters.private & admin)
+@Bot.on_message(filters.command('premium_usersss') & filters.private & admin)
 async def list_premium_users_command(client, message):
     # Define IST timezone
     ist = timezone("Asia/Kolkata")
