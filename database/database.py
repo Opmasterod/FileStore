@@ -129,7 +129,7 @@ class Rohit:
         current_time = int(time.time())
     
     # Check individual premium status
-        user_doc = self.premium_users.find_one({'_id': user_id})
+        user_doc = await self.premium_users.find_one({'_id': user_id})
         if user_doc and 'expiration_time' in user_doc:
             remaining_time = user_doc['expiration_time'] - current_time
             print(f"User {user_id} check: expiration_time={user_doc['expiration_time']}, remaining_time={remaining_time}")
@@ -137,7 +137,7 @@ class Rohit:
                 return True, remaining_time
     
     # Check global 'All' premium status
-        all_doc = self.premium_users.find_one({'_id': 'All'})
+        all_doc = await self.premium_users.find_one({'_id': 'All'})
         if all_doc and 'expiration_time' in all_doc:
             remaining_time = all_doc['expiration_time'] - current_time
             print(f"All premium check: expiration_time={all_doc['expiration_time']}, remaining_time={remaining_time}")
@@ -153,7 +153,7 @@ class Rohit:
   #  Returns a list of tuples: [(user_id, remaining_time), ...].
   #  Includes 'All' if active.
  #   """
-        premium_docs = self.premium_users.find()
+        premium_docs = await self.premium_users.find()
         current_time = int(time.time())
         premium_list = []
     
