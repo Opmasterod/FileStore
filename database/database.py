@@ -57,11 +57,16 @@ class Rohit:
 
 
     # USER DATA
-    async def present_user(user_id: int) -> bool:
-#    """
-  #  Check if a user exists in the users collection.
- #   """
-        found = user_data.find_one({'_id': user_id})
+    async def present_user(self, user_id: int, time_seconds: int = None) -> bool:
+      #  """
+     #   Check if a user exists in the users collection.
+     # #  Optionally, verify if the user has a valid premium status based on time_seconds.
+     #   """
+        query = {'_id': user_id}
+        if time_seconds is not None:
+            # Example: Check if premium_expiry is greater than or equal to time_seconds
+            query['expiration_time'] = {'$gte': time_seconds}
+        found = await self.user_data.find_one(query)
         return bool(found)
 
     async def add_user(user_id: int) -> None:
