@@ -189,9 +189,10 @@ async def start_command(client: Client, message: Message):
             await message.reply_text(f"Failed to decode string: {str(e)}")
             return
 
-        temp_msg = await message.reply(f"Wait A Second...",
-                                      message_effect_id=5104841245755180586
-                                      )
+        temp_msg = await message.reply(
+            f"Wait A Second...",
+            message_effect_id=5104841245755180586
+            )
         )
         try:
             messages = await get_messages(client, ids)
