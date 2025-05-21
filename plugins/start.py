@@ -99,7 +99,7 @@ async def start_command(client: Client, message: Message):
             # Handle WEBSITE_URL_MODE HACKHEIST parameter
             if base64_string.startswith("HACKHEIST="):
                 base64_string = base64_string.split("HACKHEIST=", 1)[1]
-            await message.reply_text(f"Processing link with base64: {base64_string}")
+            
         except IndexError:
             await message.reply_text("Welcome to the bot!")
             return
@@ -108,7 +108,7 @@ async def start_command(client: Client, message: Message):
         is_new_format = False
         try:
             string = await decode(base64_string)
-            await message.reply_text(f"Decoded string: {string}")
+            
             
             # Check for new format: get-HACKHEIST_{f_encoded}-{s_encoded}
             if string.startswith("get-HACKHEIST-"):
@@ -140,7 +140,7 @@ async def start_command(client: Client, message: Message):
                     return
                 try:
                     f_msg_id, s_msg_id = await decode_link(base64_string)
-                    await message.reply_text(f"New format decoded: {f_msg_id}, {s_msg_id}")
+                    
                     if f_msg_id <= s_msg_id:
                         ids = range(f_msg_id, s_msg_id + 1)
                     else:
@@ -161,7 +161,7 @@ async def start_command(client: Client, message: Message):
                     try:
                         start = int(int(argument[1]) / abs(client.db_channel.id))
                         end = int(int(argument[2]) / abs(client.db_channel.id))
-                        await message.reply_text(f"Old format IDs: {start} to {end}")
+                        
                     except (ValueError, IndexError) as e:
                         await message.reply_text(f"Error parsing old format: {str(e)}")
                         return
@@ -192,7 +192,7 @@ async def start_command(client: Client, message: Message):
         temp_msg = await message.reply("Wait A Second...")
         try:
             messages = await get_messages(client, ids)
-            await temp_msg.edit("Messages fetched successfully!")
+            
         except Exception as e:
             await temp_msg.edit(f"Something went wrong: {str(e)}")
             return
