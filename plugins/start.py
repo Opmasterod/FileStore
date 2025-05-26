@@ -190,7 +190,7 @@ async def start_command(client: Client, message: Message):
             return
 
         temp_msg = await message.reply(
-            f"Wait A Second...",
+            f"ʀᴜᴋᴏ sᴀᴀʀ ᴅᴇᴛᴀ ʜᴜ ɴɪᴋᴀʟ ᴋᴇ 😈 ᴀᴀᴘ ʟᴇʟᴇɴᴀ",
             message_effect_id=5104841245755180586
             )
         
@@ -202,6 +202,8 @@ async def start_command(client: Client, message: Message):
             return
         await temp_msg.delete()
 
+        codeflix_msgs = []
+        
         for msg in messages:
             if bool(CUSTOM_CAPTION) & bool(msg.document):
                 caption = CUSTOM_CAPTION.format(previouscaption="" if not msg.caption else msg.caption.html, filename=msg.document.file_name)
@@ -223,7 +225,7 @@ async def start_command(client: Client, message: Message):
                     reply_markup=reply_markup,
                     protect_content=protect_content
                 )
-                await asyncio.sleep(0.5)
+                codeflix_msgs.append(copied_msg)
             except FloodWait as e:
                 await asyncio.sleep(e.x)
                 await msg.copy(
@@ -233,6 +235,7 @@ async def start_command(client: Client, message: Message):
                     reply_markup=reply_markup,
                     protect_content=protect_content
                 )
+                codeflix_msgs.append(copied_msg)
             except Exception as e:
                 await message.reply_text(f"Error copying message: {str(e)}")
         pass
