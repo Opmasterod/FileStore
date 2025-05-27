@@ -178,7 +178,7 @@ async def start_command(client: Client, message: Message):
                 elif len(argument) == 2:
                     try:
                         ids = [int(int(argument[1]) / abs(client.db_channel.id))]
-                        await message.reply_text(f"Old format single ID: {ids[0]}")
+                        
                     except (ValueError, IndexError) as e:
                         await message.reply_text(f"Error parsing old format single ID: {str(e)}")
                         return
@@ -190,7 +190,7 @@ async def start_command(client: Client, message: Message):
             return
 
         temp_msg = await message.reply(
-            f"ʀᴜᴋᴏ sᴀᴀʀ ᴅᴇᴛᴀ ʜᴜ ɴɪᴋᴀʟ ᴋᴇ 😈 ᴀᴀᴘ ʟᴇʟᴇɴᴀ",
+            f"<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>",
             message_effect_id=5104841245755180586
             )
         
@@ -205,15 +205,37 @@ async def start_command(client: Client, message: Message):
         codeflix_msgs = []
         
         for msg in messages:
-            if bool(CUSTOM_CAPTION) & bool(msg.document):
-                caption = CUSTOM_CAPTION.format(previouscaption="" if not msg.caption else msg.caption.html, filename=msg.document.file_name)
-            else:
-                caption = "" if not msg.caption else msg.caption.html
+            # Initialize filename and media_type with safe defaults
+            filename = "Unknown"
+            media_type = "Unknown"
 
-            if DISABLE_CHANNEL_BUTTON:
-                reply_markup = msg.reply_markup
-            else:
-                reply_markup = None
+            # Determine the media type and filename
+            if msg.video:
+                media_type = "Video"
+                filename = msg.video.file_name if msg.video.file_name else "Unnamed Video"
+            elif msg.document:
+                filename = msg.document.file_name if msg.document.file_name else "Unnamed Document"
+                media_type = "PDF" if filename.endswith(".pdf") else "Document"
+            elif msg.photo:
+                media_type = "Image"
+                filename = "Image"
+            elif msg.text:
+                media_type = "Text"
+                filename = "Text Content"
+
+    # Generate caption
+            caption = (
+                CUSTOM_CAPTION.format(
+                    previouscaption=(msg.caption.html if msg.caption else "𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧 🔥"),
+                    filename=filename,
+                    mediatype=media_type,
+                )
+                if bool(CUSTOM_CAPTION)
+                else (msg.caption.html if msg.caption else "")
+            )
+
+            reply_markup = msg.reply_markup if DISABLE_CHANNEL_BUTTON else None
+
 
             try:
                 # Use protect_content=True for new format, PROTECT_CONTENT for old format
@@ -242,7 +264,8 @@ async def start_command(client: Client, message: Message):
 
         if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
-                f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}/n/n<blockquote><b>ʙᴜᴛ ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😁 ᴀғᴛᴇʀ ᴅᴇʟᴇᴛᴇᴅ ʏᴏᴜ ᴄᴀɴ ᴀɢᴀɪɴ ᴀᴄᴄᴇss ᴛʜʀᴏᴜɢʜ ᴏᴜʀ ᴡᴇʙsɪᴛᴇs 😘</b></blockquote>"
+                f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}/n"
+                f"<blockquote><b>ʙᴜᴛ ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😁 ᴀғᴛᴇʀ ᴅᴇʟᴇᴛᴇᴅ ʏᴏᴜ ᴄᴀɴ ᴀɢᴀɪɴ ᴀᴄᴄᴇss ᴛʜʀᴏᴜɢʜ ᴏᴜʀ ᴡᴇʙsɪᴛᴇs 😘</b></blockquote>"
             )
 
             await asyncio.sleep(FILE_AUTO_DELETE)
