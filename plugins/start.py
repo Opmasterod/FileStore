@@ -218,7 +218,7 @@ async def start_command(client: Client, message: Message):
             try:
                 # Use protect_content=True for new format, PROTECT_CONTENT for old format
                 protect_content = True if is_new_format else PROTECT_CONTENT
-                await msg.copy(
+                copied_msg = await msg.copy(
                     chat_id=message.from_user.id,
                     caption=caption,
                     parse_mode=ParseMode.HTML,
@@ -228,7 +228,7 @@ async def start_command(client: Client, message: Message):
                 codeflix_msgs.append(copied_msg)
             except FloodWait as e:
                 await asyncio.sleep(e.x)
-                await msg.copy(
+                copied_msg = await msg.copy(
                     chat_id=message.from_user.id,
                     caption=caption,
                     parse_mode=ParseMode.HTML,
