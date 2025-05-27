@@ -290,7 +290,7 @@ async def start_command(client: Client, message: Message):
 
                 await notification_msg.edit(
                     "<blockquote><b>ʏᴏᴜʀ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ ɪs  ᴅᴇʟᴇᴛᴇᴅ !!\n</b></blockquote>"
-                    "<b>ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ 👇</b>"
+                    "<b>ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ 👇</b>\n\n"
                     "<b> <a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>",
                     reply_markup=keyboard
                 )
