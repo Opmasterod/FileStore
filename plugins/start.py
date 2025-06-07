@@ -246,6 +246,7 @@ async def start_command(client: Client, message: Message):
                     reply_markup=reply_markup,
                     protect_content=protect_content
                 )
+                await asyncio.sleep(0.5)
                 codeflix_msgs.append(copied_msg)
             except FloodWait as e:
                 await asyncio.sleep(e.x)
