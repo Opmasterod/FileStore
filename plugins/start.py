@@ -190,8 +190,7 @@ async def start_command(client: Client, message: Message):
             return
 
         temp_msg = await message.reply(
-            f"<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>",
-            message_effect_id=5104841245755180586
+            f"<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>"
             )
         
         try:
@@ -260,7 +259,8 @@ async def start_command(client: Client, message: Message):
                 codeflix_msgs.append(copied_msg)
             except Exception as e:
                 await message.reply_text(f"Error copying message: {str(e)}")
-        pass
+        
+            await asyncio.sleep(2)
 
         if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
