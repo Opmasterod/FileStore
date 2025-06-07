@@ -70,13 +70,13 @@ class Rohit:
         found = await self.user_data.find_one(query)
         return bool(found)
 
-    async def add_user(user_id: int) -> None:
+    async def add_user(self, user_id: int) -> None:
    # """
    # Add a user to the users collection.
   #  """
         user_data.insert_one({'_id': user_id})
 
-    async def full_userbase() -> list:
+    async def full_userbase(self) -> list:
    # """
  #   Get all user IDs from the users collection.
 #    """
@@ -84,7 +84,7 @@ class Rohit:
         user_ids = [doc['_id'] for doc in user_docs]
         return user_ids
 
-    async def del_user(user_id: int) -> None:
+    async def del_user(self, user_id: int) -> None:
 #    """
 #    Delete a user from the users collection.
 #    """
@@ -147,7 +147,7 @@ class Rohit:
         print(f"User {user_id} is not premium: no valid premium entry found")
         return False, 0
 
-    async def list_premium_users() -> list:
+    async def list_premium_users(self) -> list:
   #  """
 #    List all premium users and their remaining time (in seconds).
   #  Returns a list of tuples: [(user_id, remaining_time), ...].
