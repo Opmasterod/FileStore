@@ -133,6 +133,10 @@ async def decode(base64_string):
     string = string_bytes.decode("ascii")
     return string
 
+# Add other utils (is_subscribed, not_joined, get_exp_time) as needed
+
+# Add other utils (is_subscribed, not_joined, get_exp_time) as needed
+
 async def encode_link(f_msg_id: int, s_msg_id: int, channel_id: int) -> str:
     """
     Encode Telegram message IDs and return a Telegram bot deep link.
@@ -210,7 +214,7 @@ async def get_messages(client, channel_id, message_ids):
     messages = []
     total_messages = 0
     while total_messages < len(message_ids):
-        temb_ids = message_ids[total_messages:total_messages+200]
+        temb_ids = message_ids[total_messages:total_messages+100]  # Reduced batch size to avoid rate limits
         try:
             msgs = await client.get_messages(
                 chat_id=channel_id,
@@ -235,31 +239,31 @@ async def get_messages(client, channel_id, message_ids):
 
 async def get_message_id(client, message):
     if message.forward_origin and hasattr(message.forward_origin, 'chat'):
-        # Handle forwarded messages
         return message.forward_origin.chat.id, message.forward_origin.message_id
     elif message.forward_origin and hasattr(message.forward_origin, 'sender_user_name'):
-        return None, 0  # Forwarded from a hidden user, invalid
+        return None, 0
     elif message.text:
-        # Handle both private (https://t.me/c/2493255368/45956) and public (https://t.me/username/45956) links
         pattern = r"https://t.me/(?:c/)?([^/]+)/(\d+)"
         matches = re.match(pattern, message.text)
         if not matches:
             return None, 0
-        channel_identifier = matches.group(1)  # Either channel ID (digits) or username
+        channel_identifier = matches.group(1)
         msg_id = int(matches.group(2))
         try:
             if channel_identifier.isdigit():
-                # Private channel (e.g., 2493255368)
                 channel_id = int(f"-100{channel_identifier}")
             else:
-                # Public channel (e.g., username)
                 chat = await client.get_chat(channel_identifier)
                 channel_id = chat.id
             return channel_id, msg_id
-        except:
+        except Exception as e:
+            print(f"Error getting chat: {str(e)}")
             return None, 0
     else:
         return None, 0
+
+# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
+# Ask Doubt on telegram @CodeflixSupport
         
 def get_readable_time(seconds: int) -> str:
     count = 0
