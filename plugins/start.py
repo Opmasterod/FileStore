@@ -60,7 +60,6 @@ async def short_url(client: Client, message: Message, base64_string):
         pass
 
 
-
 @Bot.on_message(filters.command('start') & filters.private)
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
@@ -119,6 +118,7 @@ async def start_command(client: Client, message: Message):
     # Extract base64 string
     try:
         base64_string = text.split(" ", 1)[1]
+        print(f"Base64 string: {base64_string}")  # Debug
     except IndexError:
         await message.reply_text("Welcome to the bot!")
         return
@@ -126,9 +126,10 @@ async def start_command(client: Client, message: Message):
     # Decode the string
     try:
         string = await decode(base64_string)
-        print(f"Decoded string: {string}")  # Debug: Log decoded string
+        print(f"Decoded string: {string}")  # Debug
         # Process format: get-{channel_id}-{f_msg_id}-{s_msg_id}
         argument = string.split("-")
+        print(f"Split arguments: {argument}")  # Debug
         if len(argument) == 4 and argument[0] == "get":
             try:
                 channel_id = int(argument[1])
@@ -197,7 +198,7 @@ async def start_command(client: Client, message: Message):
             # Generate caption
             caption = (
                 CUSTOM_CAPTION.format(
-                    previouscaption=(msg.caption.html if msg.caption else "𝗛𝗔�_C𝗞𝗛𝗘𝗜𝗦𝗧 🔥"),
+                    previouscaption=(msg.caption.html if msg.caption else "𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧 🔥"),
                     filename=filename,
                     mediatype=media_type,
                 )
@@ -269,7 +270,7 @@ async def start_command(client: Client, message: Message):
         await message.reply_text(f"Failed to decode string: {str(e)}")
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport                    
+# Ask Doubt on telegram @CodeflixSupport
 #=====================================================================================##
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
