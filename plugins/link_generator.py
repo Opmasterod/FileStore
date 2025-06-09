@@ -7,11 +7,6 @@ from pyrogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from asyncio import TimeoutError
 from helper_func import encode, get_message_id, admin, encode_link
 
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from helper_funcn import get_message_id
-from your_utils import encode  # Adjust to your actual utils
-
 @Bot.on_message(filters.private & admin & filters.command('batch'))
 async def batch(client: Client, message: Message):
     # Get the first message
