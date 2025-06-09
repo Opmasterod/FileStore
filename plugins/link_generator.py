@@ -9,32 +9,65 @@ from helper_func import encode, get_message_id, admin, encode_link
 
 @Bot.on_message(filters.private & admin & filters.command('batch'))
 async def batch(client: Client, message: Message):
+    async def extract_channel_and_message_id(client, msg):
+        if msg.text and msg.text.startswith("https://t.me/c/"):
+            # Extract channel ID and message ID from link
+            try:
+                link_parts = msg.text.split("/")
+                channel_id = int(link_parts[4])  # e.g., 2493255368
+                message_id = int(link_parts[5])  # e.g., 45956
+                return channel_id, message_id
+            except (IndexError, ValueError):
+                return None, None
+        elif msg.forward_from_chat and msg.forward_from_message_id:
+            # Extract channel ID and message ID from forwarded message
+            channel_id = msg.forward_from_chat.id
+            message_id = msg.forward_from_message_id
+            return channel_id, message_id
+        return None, None
+
+    # Get the first message
     while True:
         try:
-            first_message = await client.ask(text = "Forward the First Message from DB Channel (with Quotes)..\n\nor Send the DB Channel Post Link", chat_id = message.from_user.id, filters=(filters.forwarded | (filters.text & ~filters.forwarded)), timeout=60)
+            first_message = await client.ask(
+                text="Forward the First Message from DB Channel (with Quotes)..\n\nor Send the DB Channel Post Link",
+                chat_id=message.from_user.id,
+                filters=(filters.forwarded | (filters.text & ~filters.forwarded)),
+                timeout=60
+            )
         except:
             return
-        f_msg_id = await get_message_id(client, first_message)
-        if f_msg_id:
+        f_channel_id, f_msg_id = await extract_channel_and_message_id(client, first_message)
+        if f_channel_id and f_msg_id:
             break
         else:
-            await first_message.reply("❌ Error\n\nthis Forwarded Post is not from my DB Channel or this Link is taken from DB Channel", quote = True)
+            await first_message.reply("❌ Error\n\nThis is not a valid forwarded post or link from a Telegram channel.", quote=True)
             continue
 
+    # Get the second message
     while True:
         try:
-            second_message = await client.ask(text = "Forward the Last Message from DB Channel (with Quotes)..\nor Send the DB Channel Post link", chat_id = message.from_user.id, filters=(filters.forwarded | (filters.text & ~filters.forwarded)), timeout=60)
+            second_message = await client.ask(
+                text="Forward the Last Message from DB Channel (with Quotes)..\nor Send the DB Channel Post Link",
+                chat_id=message.from_user.id,
+                filters=(filters.forwarded | (filters.text & ~filters.forwarded)),
+                timeout=60
+            )
         except:
             return
-        s_msg_id = await get_message_id(client, second_message)
-        if s_msg_id:
-            break
+        s_channel_id, s_msg_id = await extract_channel_and_message_id(client, second_message)
+        if s_channel_id and s_msg_id:
+            if s_channel_id == f_channel_id:  # Ensure both messages are from the same channel
+                break
+            else:
+                await second_message.reply("❌ Error\n\nThe second message must be from the same channel as the first message.", quote=True)
+                continue
         else:
-            await second_message.reply("❌ Error\n\nthis Forwarded Post is not from my DB Channel or this Link is taken from DB Channel", quote = True)
+            await second_message.reply("❌ Error\n\nThis is not a valid forwarded post or link from a Telegram channel.", quote=True)
             continue
 
-
-    string = f"get-{f_msg_id * abs(client.db_channel.id)}-{s_msg_id * abs(client.db_channel.id)}"
+    # Generate the link using the extracted channel ID
+    string = f"get-{f_msg_id * abs(f_channel_id)}-{s_msg_id * abs(f_channel_id)}"
     base64_string = await encode(string)
     link = f"https://t.me/{client.username}?start={base64_string}"
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("🔁 Share URL", url=f'https://telegram.me/share/url?url={link}')]])
