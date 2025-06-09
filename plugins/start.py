@@ -110,8 +110,8 @@ async def start_command(client: Client, message: Message):
                 mention=message.from_user.mention,
                 id=message.from_user.id
             ),
-            reply_markup=reply_markup
-            
+            reply_markup=reply_markup,
+            message_effect_id=5104841245755180586
         )
         return
 
@@ -127,6 +127,7 @@ async def start_command(client: Client, message: Message):
     # Decode the string
     try:
         string = await decode(base64_string)
+        print(f"Decoded string: {string}")  # Debug: Log decoded string
         if string.startswith("get-HACKHEIST-"):
             # Handle HACKHEIST format
             is_premium, remaining_time = await db.is_premium_user(user_id)
@@ -136,14 +137,14 @@ async def start_command(client: Client, message: Message):
                 if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
                     await message.reply_text(
                         f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲\n"
-                        f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ",
+                        f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚ɪ𝐧 - ",
                         reply_markup=InlineKeyboardMarkup(
                             [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
                         )
                     )
                 else:
                     await message.reply_text(
-                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
+                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮�{m 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
                         f"Contact for buy",
                         reply_markup=InlineKeyboardMarkup(
                             [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
@@ -152,6 +153,7 @@ async def start_command(client: Client, message: Message):
                 return
             try:
                 channel_id, f_msg_id, s_msg_id = await decode_link(base64_string)
+                print(f"HACKHEIST format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
                 if f_msg_id <= s_msg_id:
                     ids = list(range(f_msg_id, s_msg_id + 1))
                 else:
@@ -171,6 +173,7 @@ async def start_command(client: Client, message: Message):
                     channel_id = int(argument[1])
                     f_msg_id = int(argument[2])
                     s_msg_id = int(argument[3])
+                    print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
                     if f_msg_id <= s_msg_id:
                         ids = list(range(f_msg_id, s_msg_id + 1))
                     else:
@@ -186,6 +189,7 @@ async def start_command(client: Client, message: Message):
                 try:
                     channel_id = int(argument[1])
                     f_msg_id = int(argument[2])
+                    print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
                     ids = [f_msg_id]
                 except (ValueError, IndexError) as e:
                     await message.reply_text(f"Error parsing single ID format: {str(e)}")
@@ -198,6 +202,7 @@ async def start_command(client: Client, message: Message):
         temp_msg = await message.reply("<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>")
         try:
             messages = await get_messages(client, channel_id, ids)
+            print(f"Fetched {len(messages)} messages for channel_id={channel_id}, ids={ids}")  # Debug
             if not messages or all(msg is None for msg in messages):
                 await temp_msg.edit("Failed to fetch messages. They may have been deleted or are inaccessible.")
                 return
@@ -302,6 +307,9 @@ async def start_command(client: Client, message: Message):
 
     except ValueError as e:
         await message.reply_text(f"Failed to decode string: {str(e)}")
+
+# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
+# Ask Doubt on telegram @CodeflixSupport
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
