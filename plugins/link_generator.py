@@ -7,6 +7,7 @@ from pyrogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from asyncio import TimeoutError
 from helper_func import encode, get_message_id, admin, encode_link
 
+
 @Bot.on_message(filters.private & admin & filters.command('batch'))
 async def batch(client: Client, message: Message):
     # Get the first message
@@ -50,12 +51,13 @@ async def batch(client: Client, message: Message):
             continue
 
     # Generate the link using the extracted channel ID
-    string = f"get--100{f_channel_id}-{f_msg_id}-{s_msg_id}"
+    string = f"get-{f_channel_id}-{f_msg_id}-{s_msg_id}"
     base64_string = await encode(string)
+    print(f"Generated string: {string}, encoded: {base64_string}")  # Debug
     link = f"https://t.me/{client.username}?start={base64_string}"
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("🔁 Share URL", url=f'https://telegram.me/share/url?url={link}')]])
     await second_message.reply_text(f"<b>Here is your link</b>\n\n{link}", quote=True, reply_markup=reply_markup)
-
+    
 @Bot.on_message(filters.private & admin & filters.command('genlink'))
 async def link_generator(client: Client, message: Message):
     while True:
