@@ -60,6 +60,7 @@ async def short_url(client: Client, message: Message, base64_string):
         pass
 
 
+
 @Bot.on_message(filters.command('start') & filters.private)
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
@@ -118,8 +119,6 @@ async def start_command(client: Client, message: Message):
     # Extract base64 string
     try:
         base64_string = text.split(" ", 1)[1]
-        if base64_string.startswith("HACKHEIST="):
-            base64_string = base64_string.split("HACKHEIST=", 1)[1]
     except IndexError:
         await message.reply_text("Welcome to the bot!")
         return
@@ -128,31 +127,14 @@ async def start_command(client: Client, message: Message):
     try:
         string = await decode(base64_string)
         print(f"Decoded string: {string}")  # Debug: Log decoded string
-        if string.startswith("get-HACKHEIST-"):
-            # Handle HACKHEIST format
-            is_premium, remaining_time = await db.is_premium_user(user_id)
-            current_time = int(time.time())
-            if not is_premium:
-                user_doc = await db.premium_users.find_one({'_id': user_id})
-                if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
-                    await message.reply_text(
-                        f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲\n"
-                        f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚ɪ𝐧 - ",
-                        reply_markup=InlineKeyboardMarkup(
-                            [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
-                        )
-                    )
-                else:
-                    await message.reply_text(
-                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n",
-                        reply_markup=InlineKeyboardMarkup(
-                            [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
-                        )
-                    )
-                return
+        # Process format: get-{channel_id}-{f_msg_id}-{s_msg_id}
+        argument = string.split("-")
+        if len(argument) == 4 and argument[0] == "get":
             try:
-                channel_id, f_msg_id, s_msg_id = await decode_link(base64_string)
-                print(f"HACKHEIST format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
+                channel_id = int(argument[1])
+                f_msg_id = int(argument[2])
+                s_msg_id = int(argument[3])
+                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
                 if f_msg_id <= s_msg_id:
                     ids = list(range(f_msg_id, s_msg_id + 1))
                 else:
@@ -161,41 +143,21 @@ async def start_command(client: Client, message: Message):
                     while i >= s_msg_id:
                         ids.append(i)
                         i -= 1
-            except ValueError as e:
-                await message.reply_text(f"Error parsing HACKHEIST format: {str(e)}")
+            except (ValueError, IndexError) as e:
+                await message.reply_text(f"Error parsing format: {str(e)}")
+                return
+        elif len(argument) == 3 and argument[0] == "get":
+            try:
+                channel_id = int(argument[1])
+                f_msg_id = int(argument[2])
+                print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
+                ids = [f_msg_id]
+            except (ValueError, IndexError) as e:
+                await message.reply_text(f"Error parsing single ID format: {str(e)}")
                 return
         else:
-            # Process new format: get-{channel_id}-{f_msg_id}-{s_msg_id}
-            argument = string.split("-")
-            if len(argument) == 4 and argument[0] == "get":
-                try:
-                    channel_id = int(argument[1])
-                    f_msg_id = int(argument[2])
-                    s_msg_id = int(argument[3])
-                    print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
-                    if f_msg_id <= s_msg_id:
-                        ids = list(range(f_msg_id, s_msg_id + 1))
-                    else:
-                        ids = []
-                        i = f_msg_id
-                        while i >= s_msg_id:
-                            ids.append(i)
-                            i -= 1
-                except (ValueError, IndexError) as e:
-                    await message.reply_text(f"Error parsing format: {str(e)}")
-                    return
-            elif len(argument) == 3 and argument[0] == "get":
-                try:
-                    channel_id = int(argument[1])
-                    f_msg_id = int(argument[2])
-                    print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
-                    ids = [f_msg_id]
-                except (ValueError, IndexError) as e:
-                    await message.reply_text(f"Error parsing single ID format: {str(e)}")
-                    return
-            else:
-                await message.reply_text("Invalid format structure")
-                return
+            await message.reply_text("Invalid format structure")
+            return
 
         # Fetch and process messages
         temp_msg = await message.reply("<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>")
@@ -235,7 +197,7 @@ async def start_command(client: Client, message: Message):
             # Generate caption
             caption = (
                 CUSTOM_CAPTION.format(
-                    previouscaption=(msg.caption.html if msg.caption else "𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧 🔥"),
+                    previouscaption=(msg.caption.html if msg.caption else "𝗛𝗔�_C𝗞𝗛𝗘𝗜𝗦𝗧 🔥"),
                     filename=filename,
                     mediatype=media_type,
                 )
@@ -246,13 +208,12 @@ async def start_command(client: Client, message: Message):
             reply_markup = msg.reply_markup if not DISABLE_CHANNEL_BUTTON else None
 
             try:
-                protect_content = True if string.startswith("get-HACKHEIST-") else PROTECT_CONTENT
                 copied_msg = await msg.copy(
                     chat_id=user_id,
                     caption=caption,
                     parse_mode=ParseMode.HTML,
                     reply_markup=reply_markup,
-                    protect_content=protect_content
+                    protect_content=PROTECT_CONTENT
                 )
                 await asyncio.sleep(0.5)
                 codeflix_msgs.append(copied_msg)
@@ -263,7 +224,7 @@ async def start_command(client: Client, message: Message):
                     caption=caption,
                     parse_mode=ParseMode.HTML,
                     reply_markup=reply_markup,
-                    protect_content=protect_content
+                    protect_content=PROTECT_CONTENT
                 )
                 codeflix_msgs.append(copied_msg)
             except Exception as e:
@@ -308,14 +269,7 @@ async def start_command(client: Client, message: Message):
         await message.reply_text(f"Failed to decode string: {str(e)}")
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport
-
-# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport
-
-
-
-
+# Ask Doubt on telegram @CodeflixSupport                    
 #=====================================================================================##
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
