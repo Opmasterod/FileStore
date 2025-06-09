@@ -144,8 +144,7 @@ async def start_command(client: Client, message: Message):
                     )
                 else:
                     await message.reply_text(
-                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮�{m 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
-                        f"Contact for buy",
+                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n",
                         reply_markup=InlineKeyboardMarkup(
                             [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
                         )
