@@ -127,9 +127,9 @@ async def encode(string):
     return base64_string
 
 async def decode(base64_string):
-    base64_string = base64_string.strip("=") # links generated before this commit will be having = sign, hence striping them to handle padding errors.
+    base64_string = base64_string.strip("=")
     base64_bytes = (base64_string + "=" * (-len(base64_string) % 4)).encode("ascii")
-    string_bytes = base64.urlsafe_b64decode(base64_bytes) 
+    string_bytes = base64.urlsafe_b64decode(base64_bytes)
     string = string_bytes.decode("ascii")
     return string
 
@@ -217,7 +217,7 @@ async def get_messages(client, channel_id, message_ids):
                 message_ids=temb_ids
             )
         except FloodWait as e:
-            await asyncio.sleep(e.value)  # Use e.value for FloodWait duration
+            await asyncio.sleep(e.value)
             try:
                 msgs = await client.get_messages(
                     chat_id=channel_id,
@@ -225,19 +225,19 @@ async def get_messages(client, channel_id, message_ids):
                 )
             except Exception as e2:
                 print(f"Error after FloodWait: {str(e2)}")
-                msgs = []  # Assign empty list on failure
+                msgs = []
         except Exception as e:
             print(f"Error fetching messages: {str(e)}")
-            msgs = []  # Assign empty list on failure
+            msgs = []
         total_messages += len(temb_ids)
         messages.extend(msgs if isinstance(msgs, list) else [msgs] if msgs else [])
     return messages
 
 async def get_message_id(client, message):
-    if message.forward_from_chat:
-        # Return channel ID and message ID from forwarded message
-        return message.forward_from_chat.id, message.forward_from_message_id
-    elif message.forward_sender_name:
+    if message.forward_origin and hasattr(message.forward_origin, 'chat'):
+        # Handle forwarded messages
+        return message.forward_origin.chat.id, message.forward_origin.message_id
+    elif message.forward_origin and hasattr(message.forward_origin, 'sender_user_name'):
         return None, 0  # Forwarded from a hidden user, invalid
     elif message.text:
         # Handle both private (https://t.me/c/2493255368/45956) and public (https://t.me/username/45956) links
@@ -247,7 +247,6 @@ async def get_message_id(client, message):
             return None, 0
         channel_identifier = matches.group(1)  # Either channel ID (digits) or username
         msg_id = int(matches.group(2))
-        # Resolve channel_identifier to chat ID
         try:
             if channel_identifier.isdigit():
                 # Private channel (e.g., 2493255368)
@@ -261,7 +260,7 @@ async def get_message_id(client, message):
             return None, 0
     else:
         return None, 0
-
+        
 def get_readable_time(seconds: int) -> str:
     count = 0
     up_time = ""
