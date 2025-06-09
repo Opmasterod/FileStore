@@ -50,7 +50,7 @@ async def batch(client: Client, message: Message):
             continue
 
     # Generate the link using the extracted channel ID
-    string = f"get-{f_channel_id}-{f_msg_id}-{s_msg_id}"
+    string = f"get--100{f_channel_id}-{f_msg_id}-{s_msg_id}"
     base64_string = await encode(string)
     link = f"https://t.me/{client.username}?start={base64_string}"
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("🔁 Share URL", url=f'https://telegram.me/share/url?url={link}')]])
