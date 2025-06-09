@@ -60,6 +60,7 @@ async def short_url(client: Client, message: Message, base64_string):
         pass
 
 
+
 @Bot.on_message(filters.command('start') & filters.private)
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
@@ -93,54 +94,68 @@ async def start_command(client: Client, message: Message):
 
     # Handle normal message flow
     text = message.text
-    if len(text) > 7:
-        try:
-            base64_string = text.split(" ", 1)[1]
-            # Handle WEBSITE_URL_MODE HACKHEIST parameter
-            if base64_string.startswith("HACKHEIST="):
-                base64_string = base64_string.split("HACKHEIST=", 1)[1]
-            
-        except IndexError:
-            await message.reply_text("Welcome to the bot!")
-            return
-        
-        # Try decoding the string
-        is_new_format = False
-        try:
-            string = await decode(base64_string)
-            
-            
-            # Check for new format: get-HACKHEIST_{f_encoded}-{s_encoded}
-            if string.startswith("get-HACKHEIST-"):
-                is_new_format = True
-                # Check premium status
-                is_premium, remaining_time = await db.is_premium_user(id)
-                current_time = int(time.time())
-                if is_premium:
-                    await message.reply_text(f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐚 𝐏𝐫𝐞𝐦𝐢𝐮𝐦 𝐔𝐬𝐞𝐫 🥰</blockquote></b>")
+    if len(text) <= 7:
+        await message.reply_text("Welcome to the bot!")
+        return
+
+    try:
+        base64_string = text.split(" ", 1)[1]
+        # Handle WEBSITE_URL_MODE HACKHEIST parameter
+        if base64_string.startswith("HACKHEIST="):
+            base64_string = base64_string.split("HACKHEIST=", 1)[1]
+    except IndexError:
+        await message.reply_text("Welcome to the bot!")
+        return
+
+    # Try decoding the string
+    try:
+        string = await decode(base64_string)
+        if string.startswith("get-HACKHEIST-"):
+            # Handle new HACKHEIST format
+            is_premium, remaining_time = await db.is_premium_user(id)
+            current_time = int(time.time())
+            if not is_premium:
+                user_doc = await db.premium_users.find_one({'_id': id})
+                if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
+                    await message.reply_text(
+                        f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲\n"
+                        f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ",
+                        reply_markup=InlineKeyboardMarkup(
+                            [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
+                        )
+                    )
                 else:
-                    # Check if user was previously premium (has an expired entry)
-                    user_doc = await db.premium_users.find_one({'_id': id})
-                    if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
-                        await message.reply_text(
-                            f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲" 
-                            f"𝐂𝐨𝐧𝐭𝐚𝐜𝐭 𝐟𝐨𝐫 𝐛𝐮𝐲 𝐚𝐠𝐚𝐢𝐧 - ",
-                            reply_markup=InlineKeyboardMarkup(
-                                [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
-                            )
-                            )
-                    else:
-                        await message.reply_text(
-                            f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
-                            f"Contact for buy",
-                            reply_markup=InlineKeyboardMarkup(
-                                [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
-                            )
-                            )
-                    return
+                    await message.reply_text(
+                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫ᴇᴍ𝐢ᴜᴍ 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
+                        f"Contact for buy",
+                        reply_markup=InlineKeyboardMarkup(
+                            [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
+                        )
+                    )
+                return
+            try:
+                channel_id, f_msg_id, s_msg_id = await decode_link(base64_string)
+                if f_msg_id <= s_msg_id:
+                    ids = range(f_msg_id, s_msg_id + 1)
+                else:
+                    ids = []
+                    i = f_msg_id
+                    while True:
+                        ids.append(i)
+                        i -= 1
+                        if i < s_msg_id:
+                            break
+            except ValueError as e:
+                await message.reply_text(f"Error parsing HACKHEIST format: {str(e)}")
+                return
+        else:
+            # Process new format: get-{channel_id}-{f_msg_id}-{s_msg_id}
+            argument = string.split("-")
+            if len(argument) == 4 and argument[0] == "get":
                 try:
-                    f_msg_id, s_msg_id = await decode_link(base64_string)
-                    
+                    channel_id = int(argument[1])
+                    f_msg_id = int(argument[2])
+                    s_msg_id = int(argument[3])
                     if f_msg_id <= s_msg_id:
                         ids = range(f_msg_id, s_msg_id + 1)
                     else:
@@ -151,43 +166,38 @@ async def start_command(client: Client, message: Message):
                             i -= 1
                             if i < s_msg_id:
                                 break
-                except ValueError as e:
-                    await message.reply_text(f"Error parsing new format: {str(e)}")
+                except (ValueError, IndexError) as e:
+                    await message.reply_text(f"Error parsing format: {str(e)}")
+                    return
+            elif len(argument) == 3 and argument[0] == "get":
+                try:
+                    channel_id = int(argument[1])
+                    f_msg_id = int(argument[2])
+                    ids = [f_msg_id]  # Single message ID
+                except (ValueError, IndexError) as e:
+                    await message.reply_text(f"Error parsing single ID format: {str(e)}")
                     return
             else:
-                # Process old format: get-{f_msg_id * abs(client.db_channel.id)}-{s_msg_id * abs(client.db_channel.id)}
-                argument = string.split("-")
-                if len(argument) == 3:
-                    try:
-                        start = int(int(argument[1]) / abs(client.db_channel.id))
-                        end = int(int(argument[2]) / abs(client.db_channel.id))
-                        
-                    except (ValueError, IndexError) as e:
-                        await message.reply_text(f"Error parsing old format: {str(e)}")
-                        return
-                    if start <= end:
-                        ids = range(start, end + 1)
-                    else:
-                        ids = []
-                        i = start
-                        while True:
-                            ids.append(i)
-                            i -= 1
-                            if i < end:
-                                break
-                elif len(argument) == 2:
-                    try:
-                        ids = [int(int(argument[1]) / abs(client.db_channel.id))]
-                        
-                    except (ValueError, IndexError) as e:
-                        await message.reply_text(f"Error parsing old format single ID: {str(e)}")
-                        return
+                await message.reply_text("Invalid format structure")
+                return
+
+        # Fetch messages using get_messages from helper_funcn.py
+        try:
+            messages = await get_messages(client, channel_id, ids)
+            # Process messages (e.g., send to user, apply auto-delete, etc.)
+            for msg in messages:
+                if msg:
+                    # Example: Forward or send the message content
+                    await msg.copy(chat_id=user_id, disable_notification=True)
                 else:
-                    await message.reply_text("Invalid old format structure")
-                    return
-        except ValueError as e:
-            await message.reply_text(f"Failed to decode string: {str(e)}")
+                    await message.reply_text("Failed to fetch one or more messages.")
+        except Exception as e:
+            await message.reply_text(f"Error fetching messages: {str(e)}")
             return
+
+    except ValueError as e:
+        await message.reply_text(f"Failed to decode string: {str(e)}")
+        return
 
         temp_msg = await message.reply(
             f"<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>"
