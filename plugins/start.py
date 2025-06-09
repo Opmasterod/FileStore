@@ -60,12 +60,9 @@ async def short_url(client: Client, message: Message, base64_string):
         pass
 
 
-
 @Bot.on_message(filters.command('start') & filters.private)
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
-    id = message.from_user.id
-    is_premium = db.is_premium_user(id)
 
     # Check if user is banned
     banned_users = await db.get_ban_users()
@@ -78,7 +75,7 @@ async def start_command(client: Client, message: Message):
             )
         )
 
-    # ✅ Check Force Subscription
+    # Check Force Subscription
     if not await is_subscribed(client, user_id):
         return await not_joined(client, message)
 
@@ -95,27 +92,47 @@ async def start_command(client: Client, message: Message):
     # Handle normal message flow
     text = message.text
     if len(text) <= 7:
-        await message.reply_text("Welcome to the bot!")
+        reply_markup = InlineKeyboardMarkup(
+            [
+                [InlineKeyboardButton("• 𝗠𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
+                [
+                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
+                    InlineKeyboardButton("ʜᴇʟᴘ •", callback_data="help")
+                ]
+            ]
+        )
+        await message.reply_photo(
+            photo=START_PIC,
+            caption=START_MSG.format(
+                first=message.from_user.first_name,
+                last=message.from_user.last_name,
+                username=None if not message.from_user.username else '@' + message.from_user.username,
+                mention=message.from_user.mention,
+                id=message.from_user.id
+            ),
+            reply_markup=reply_markup
+            
+        )
         return
 
+    # Extract base64 string
     try:
         base64_string = text.split(" ", 1)[1]
-        # Handle WEBSITE_URL_MODE HACKHEIST parameter
         if base64_string.startswith("HACKHEIST="):
             base64_string = base64_string.split("HACKHEIST=", 1)[1]
     except IndexError:
         await message.reply_text("Welcome to the bot!")
         return
 
-    # Try decoding the string
+    # Decode the string
     try:
         string = await decode(base64_string)
         if string.startswith("get-HACKHEIST-"):
-            # Handle new HACKHEIST format
-            is_premium, remaining_time = await db.is_premium_user(id)
+            # Handle HACKHEIST format
+            is_premium, remaining_time = await db.is_premium_user(user_id)
             current_time = int(time.time())
             if not is_premium:
-                user_doc = await db.premium_users.find_one({'_id': id})
+                user_doc = await db.premium_users.find_one({'_id': user_id})
                 if user_doc and 'expiration_time' in user_doc and user_doc['expiration_time'] <= current_time:
                     await message.reply_text(
                         f"ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘɪʀᴇᴅ 🥲\n"
@@ -126,7 +143,7 @@ async def start_command(client: Client, message: Message):
                     )
                 else:
                     await message.reply_text(
-                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫ᴇᴍ𝐢ᴜᴍ 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
+                        f"<blockquote><b>𝐘𝐨𝐮 𝐚𝐫𝐞 𝐧𝐨𝐭 𝐚 𝐩𝐫𝐞𝐦𝐢𝐮𝐦 𝐮𝐬𝐞𝐫 🥺</b></blockquote>\n"
                         f"Contact for buy",
                         reply_markup=InlineKeyboardMarkup(
                             [[InlineKeyboardButton("ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")]]
@@ -136,15 +153,13 @@ async def start_command(client: Client, message: Message):
             try:
                 channel_id, f_msg_id, s_msg_id = await decode_link(base64_string)
                 if f_msg_id <= s_msg_id:
-                    ids = range(f_msg_id, s_msg_id + 1)
+                    ids = list(range(f_msg_id, s_msg_id + 1))
                 else:
                     ids = []
                     i = f_msg_id
-                    while True:
+                    while i >= s_msg_id:
                         ids.append(i)
                         i -= 1
-                        if i < s_msg_id:
-                            break
             except ValueError as e:
                 await message.reply_text(f"Error parsing HACKHEIST format: {str(e)}")
                 return
@@ -157,15 +172,13 @@ async def start_command(client: Client, message: Message):
                     f_msg_id = int(argument[2])
                     s_msg_id = int(argument[3])
                     if f_msg_id <= s_msg_id:
-                        ids = range(f_msg_id, s_msg_id + 1)
+                        ids = list(range(f_msg_id, s_msg_id + 1))
                     else:
                         ids = []
                         i = f_msg_id
-                        while True:
+                        while i >= s_msg_id:
                             ids.append(i)
                             i -= 1
-                            if i < s_msg_id:
-                                break
                 except (ValueError, IndexError) as e:
                     await message.reply_text(f"Error parsing format: {str(e)}")
                     return
@@ -173,7 +186,7 @@ async def start_command(client: Client, message: Message):
                 try:
                     channel_id = int(argument[1])
                     f_msg_id = int(argument[2])
-                    ids = [f_msg_id]  # Single message ID
+                    ids = [f_msg_id]
                 except (ValueError, IndexError) as e:
                     await message.reply_text(f"Error parsing single ID format: {str(e)}")
                     return
@@ -181,49 +194,32 @@ async def start_command(client: Client, message: Message):
                 await message.reply_text("Invalid format structure")
                 return
 
-        # Fetch messages using get_messages from helper_funcn.py
+        # Fetch and process messages
+        temp_msg = await message.reply("<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>")
         try:
             messages = await get_messages(client, channel_id, ids)
-            # Process messages (e.g., send to user, apply auto-delete, etc.)
-            for msg in messages:
-                if msg:
-                    # Example: Forward or send the message content
-                    await msg.copy(chat_id=user_id, disable_notification=True)
-                else:
-                    await message.reply_text("Failed to fetch one or more messages.")
-        except Exception as e:
-            await message.reply_text(f"Error fetching messages: {str(e)}")
-            return
-
-    except ValueError as e:
-        await message.reply_text(f"Failed to decode string: {str(e)}")
-        return
-
-        temp_msg = await message.reply(
-            f"<b> 𝗪𝗮𝗶𝘁 𝗕𝗵𝗮𝗶 🥺.. </b>"
-            )
-        
-        try:
-            messages = await get_messages(client, ids)
-            
+            if not messages or all(msg is None for msg in messages):
+                await temp_msg.edit("Failed to fetch messages. They may have been deleted or are inaccessible.")
+                return
         except Exception as e:
             await temp_msg.edit(f"Something went wrong: {str(e)}")
             return
         await temp_msg.delete()
 
         codeflix_msgs = []
-        
         for msg in messages:
-            # Initialize filename and media_type with safe defaults
+            if not msg:
+                continue
+            # Initialize filename and media_type
             filename = "Unknown"
             media_type = "Unknown"
 
-            # Determine the media type and filename
+            # Determine media type and filename
             if msg.video:
                 media_type = "Video"
-                filename = msg.video.file_name if msg.video.file_name else "Unnamed Video"
+                filename = msg.video.file_name or "Unnamed Video"
             elif msg.document:
-                filename = msg.document.file_name if msg.document.file_name else "Unnamed Document"
+                filename = msg.document.file_name or "Unnamed Document"
                 media_type = "PDF" if filename.endswith(".pdf") else "Document"
             elif msg.photo:
                 media_type = "Image"
@@ -232,7 +228,7 @@ async def start_command(client: Client, message: Message):
                 media_type = "Text"
                 filename = "Text Content"
 
-    # Generate caption
+            # Generate caption
             caption = (
                 CUSTOM_CAPTION.format(
                     previouscaption=(msg.caption.html if msg.caption else "𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧 🔥"),
@@ -243,14 +239,12 @@ async def start_command(client: Client, message: Message):
                 else (msg.caption.html if msg.caption else "")
             )
 
-            reply_markup = msg.reply_markup if DISABLE_CHANNEL_BUTTON else None
-
+            reply_markup = msg.reply_markup if not DISABLE_CHANNEL_BUTTON else None
 
             try:
-                # Use protect_content=True for new format, PROTECT_CONTENT for old format
-                protect_content = True if is_new_format else PROTECT_CONTENT
+                protect_content = True if string.startswith("get-HACKHEIST-") else PROTECT_CONTENT
                 copied_msg = await msg.copy(
-                    chat_id=message.from_user.id,
+                    chat_id=user_id,
                     caption=caption,
                     parse_mode=ParseMode.HTML,
                     reply_markup=reply_markup,
@@ -259,9 +253,9 @@ async def start_command(client: Client, message: Message):
                 await asyncio.sleep(0.5)
                 codeflix_msgs.append(copied_msg)
             except FloodWait as e:
-                await asyncio.sleep(e.x)
+                await asyncio.sleep(e.value)
                 copied_msg = await msg.copy(
-                    chat_id=message.from_user.id,
+                    chat_id=user_id,
                     caption=caption,
                     parse_mode=ParseMode.HTML,
                     reply_markup=reply_markup,
@@ -270,24 +264,22 @@ async def start_command(client: Client, message: Message):
                 codeflix_msgs.append(copied_msg)
             except Exception as e:
                 await message.reply_text(f"Error copying message: {str(e)}")
-        
-            await asyncio.sleep(2)
+                continue
 
-        if FILE_AUTO_DELETE > 0:
+        if codeflix_msgs and FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
-                f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}"
-                f"<blockquote><b>ʙᴜᴛ ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😁 ᴀғᴛᴇʀ ᴅᴇʟᴇᴛᴇᴅ ʏᴏᴜ ᴄᴀɴ ᴀɢᴀɪɴ ᴀᴄᴄᴇss ᴛʜʀᴏᴜɢʜ ᴏᴜʀ ᴡᴇʙsɪᴛᴇs 😘</b></blockquote>"
-                f"<b> <a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>"
+                f"<b>This File will be Deleted in {get_exp_time(FILE_AUTO_DELETE)}</b>\n"
+                f"<blockquote><b>But don't worry 😁 after deleted you can again access through our websites 😘</b></blockquote>\n"
+                f"<b><a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>"
             )
 
             await asyncio.sleep(FILE_AUTO_DELETE)
 
-            for snt_msg in codeflix_msgs:    
-                if snt_msg:
-                    try:    
-                        await snt_msg.delete()  
-                    except Exception as e:
-                        print(f"Error deleting message {snt_msg.id}: {e}")
+            for snt_msg in codeflix_msgs:
+                try:
+                    await snt_msg.delete()
+                except Exception as e:
+                    print(f"Error deleting message {snt_msg.id}: {e}")
 
             try:
                 reload_url = (
@@ -300,38 +292,20 @@ async def start_command(client: Client, message: Message):
                 ) if reload_url else None
 
                 await notification_msg.edit(
-                    "<blockquote><b>ʏᴏᴜʀ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ ɪs  ᴅᴇʟᴇᴛᴇᴅ !!\n</b></blockquote>"
-                    "<b>ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ 👇</b>\n\n"
-                    "<b> <a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>",
+                    "<blockquote><b>Your lectures/PDF is deleted!</b></blockquote>\n"
+                    "<b>Click below button to get your deleted lectures/PDF 👇</b>\n\n"
+                    "<b><a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>",
                     reply_markup=keyboard
                 )
             except Exception as e:
-                print(f"Error updating notification with 'Get File Again' button: {e}")
-    else:
-        reply_markup = InlineKeyboardMarkup(
-            [
-                    [InlineKeyboardButton("• 𝗠𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
+                print(f"Error updating notification: {e}")
 
-    [
-                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data = "about"),
-                    InlineKeyboardButton('ʜᴇʟᴘ •', callback_data = "help")
+    except ValueError as e:
+        await message.reply_text(f"Failed to decode string: {str(e)}")
 
-    ]
-            ]
-        )
-        await message.reply_photo(
-            photo=START_PIC,
-            caption=START_MSG.format(
-                first=message.from_user.first_name,
-                last=message.from_user.last_name,
-                username=None if not message.from_user.username else '@' + message.from_user.username,
-                mention=message.from_user.mention,
-                id=message.from_user.id
-            ),
-            reply_markup=reply_markup,
-            message_effect_id=5104841245755180586)  # 🔥
-        
-        return
+# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
+# Ask Doubt on telegram @CodeflixSupport
+
 
 
 
