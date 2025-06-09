@@ -206,20 +206,20 @@ async def decode_link(encoded_string: str) -> Tuple[int, int]:
     return f_msg_id, s_msg_id
 
 
-async def get_messages(client, message_ids):
+async def get_messages(client, channel_id, message_ids):
     messages = []
     total_messages = 0
     while total_messages != len(message_ids):
         temb_ids = message_ids[total_messages:total_messages+200]
         try:
             msgs = await client.get_messages(
-                chat_id=client.db_channel.id,
+                chat_id=channel_id,  # Use provided channel_id instead of client.db_channel.id
                 message_ids=temb_ids
             )
         except FloodWait as e:
             await asyncio.sleep(e.x)
             msgs = await client.get_messages(
-                chat_id=client.db_channel.id,
+                chat_id=channel_id,
                 message_ids=temb_ids
             )
         except:
@@ -230,28 +230,32 @@ async def get_messages(client, message_ids):
 
 async def get_message_id(client, message):
     if message.forward_from_chat:
-        if message.forward_from_chat.id == client.db_channel.id:
-            return message.forward_from_message_id
-        else:
-            return 0
+        # Return channel ID and message ID from forwarded message
+        return message.forward_from_chat.id, message.forward_from_message_id
     elif message.forward_sender_name:
-        return 0
+        return None, 0  # Forwarded from a hidden user, invalid
     elif message.text:
-        pattern = "https://t.me/(?:c/)?(.*)/(\d+)"
-        matches = re.match(pattern,message.text)
+        # Handle both private (https://t.me/c/2493255368/45956) and public (https://t.me/username/45956) links
+        pattern = r"https://t.me/(?:c/)?([^/]+)/(\d+)"
+        matches = re.match(pattern, message.text)
         if not matches:
-            return 0
-        channel_id = matches.group(1)
+            return None, 0
+        channel_identifier = matches.group(1)  # Either channel ID (digits) or username
         msg_id = int(matches.group(2))
-        if channel_id.isdigit():
-            if f"-100{channel_id}" == str(client.db_channel.id):
-                return msg_id
-        else:
-            if channel_id == client.db_channel.username:
-                return msg_id
+        # Resolve channel_identifier to chat ID
+        try:
+            if channel_identifier.isdigit():
+                # Private channel (e.g., 2493255368)
+                channel_id = int(f"-100{channel_identifier}")
+            else:
+                # Public channel (e.g., username)
+                chat = await client.get_chat(channel_identifier)
+                channel_id = chat.id
+            return channel_id, msg_id
+        except:
+            return None, 0
     else:
-        return 0
-
+        return None, 0
 
 def get_readable_time(seconds: int) -> str:
     count = 0
