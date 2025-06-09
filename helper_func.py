@@ -209,23 +209,28 @@ async def decode_link(encoded_string: str) -> Tuple[int, int]:
 async def get_messages(client, channel_id, message_ids):
     messages = []
     total_messages = 0
-    while total_messages != len(message_ids):
+    while total_messages < len(message_ids):
         temb_ids = message_ids[total_messages:total_messages+200]
         try:
-            msgs = await client.get_messages(
-                chat_id=channel_id,  # Use provided channel_id instead of client.db_channel.id
-                message_ids=temb_ids
-            )
-        except FloodWait as e:
-            await asyncio.sleep(e.x)
             msgs = await client.get_messages(
                 chat_id=channel_id,
                 message_ids=temb_ids
             )
-        except:
-            pass
+        except FloodWait as e:
+            await asyncio.sleep(e.value)  # Use e.value for FloodWait duration
+            try:
+                msgs = await client.get_messages(
+                    chat_id=channel_id,
+                    message_ids=temb_ids
+                )
+            except Exception as e2:
+                print(f"Error after FloodWait: {str(e2)}")
+                msgs = []  # Assign empty list on failure
+        except Exception as e:
+            print(f"Error fetching messages: {str(e)}")
+            msgs = []  # Assign empty list on failure
         total_messages += len(temb_ids)
-        messages.extend(msgs)
+        messages.extend(msgs if isinstance(msgs, list) else [msgs] if msgs else [])
     return messages
 
 async def get_message_id(client, message):
