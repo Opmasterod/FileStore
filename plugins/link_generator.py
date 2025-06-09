@@ -7,25 +7,13 @@ from pyrogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from asyncio import TimeoutError
 from helper_func import encode, get_message_id, admin, encode_link
 
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from helper_funcn import get_message_id
+from your_utils import encode  # Adjust to your actual utils
+
 @Bot.on_message(filters.private & admin & filters.command('batch'))
 async def batch(client: Client, message: Message):
-    async def extract_channel_and_message_id(client, msg):
-        if msg.text and msg.text.startswith("https://t.me/c/"):
-            # Extract channel ID and message ID from link
-            try:
-                link_parts = msg.text.split("/")
-                channel_id = int(link_parts[4])  # e.g., 2493255368
-                message_id = int(link_parts[5])  # e.g., 45956
-                return channel_id, message_id
-            except (IndexError, ValueError):
-                return None, None
-        elif msg.forward_from_chat and msg.forward_from_message_id:
-            # Extract channel ID and message ID from forwarded message
-            channel_id = msg.forward_from_chat.id
-            message_id = msg.forward_from_message_id
-            return channel_id, message_id
-        return None, None
-
     # Get the first message
     while True:
         try:
@@ -37,7 +25,7 @@ async def batch(client: Client, message: Message):
             )
         except:
             return
-        f_channel_id, f_msg_id = await extract_channel_and_message_id(client, first_message)
+        f_channel_id, f_msg_id = await get_message_id(client, first_message)
         if f_channel_id and f_msg_id:
             break
         else:
@@ -55,7 +43,7 @@ async def batch(client: Client, message: Message):
             )
         except:
             return
-        s_channel_id, s_msg_id = await extract_channel_and_message_id(client, second_message)
+        s_channel_id, s_msg_id = await get_message_id(client, second_message)
         if s_channel_id and s_msg_id:
             if s_channel_id == f_channel_id:  # Ensure both messages are from the same channel
                 break
@@ -67,12 +55,11 @@ async def batch(client: Client, message: Message):
             continue
 
     # Generate the link using the extracted channel ID
-    string = f"get-{f_msg_id * abs(f_channel_id)}-{s_msg_id * abs(f_channel_id)}"
+    string = f"get-{f_channel_id}-{f_msg_id}-{s_msg_id}"
     base64_string = await encode(string)
     link = f"https://t.me/{client.username}?start={base64_string}"
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("🔁 Share URL", url=f'https://telegram.me/share/url?url={link}')]])
     await second_message.reply_text(f"<b>Here is your link</b>\n\n{link}", quote=True, reply_markup=reply_markup)
-
 
 @Bot.on_message(filters.private & admin & filters.command('genlink'))
 async def link_generator(client: Client, message: Message):
