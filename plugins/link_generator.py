@@ -8,6 +8,7 @@ from asyncio import TimeoutError
 from helper_func import encode, get_message_id, admin, encode_link
 
 
+
 @Bot.on_message(filters.private & admin & filters.command('batch'))
 async def batch(client: Client, message: Message):
     # Get the first message
@@ -41,7 +42,7 @@ async def batch(client: Client, message: Message):
             return
         s_channel_id, s_msg_id = await get_message_id(client, second_message)
         if s_channel_id and s_msg_id:
-            if s_channel_id == f_channel_id:  # Ensure both messages are from the same channel
+            if s_channel_id == f_channel_id:
                 break
             else:
                 await second_message.reply("❌ Error\n\nThe second message must be from the same channel as the first message.", quote=True)
@@ -50,8 +51,9 @@ async def batch(client: Client, message: Message):
             await second_message.reply("❌ Error\n\nThis is not a valid forwarded post or link from a Telegram channel.", quote=True)
             continue
 
-    # Generate the link using the extracted channel ID
-    string = f"get-{f_channel_id}-{f_msg_id}-{s_msg_id}"
+    # Generate the link in old format
+    abs_channel_id = abs(f_channel_id)
+    string = f"get-{f_msg_id * abs_channel_id}-{s_msg_id * abs_channel_id}"
     base64_string = await encode(string)
     print(f"Generated string: {string}, encoded: {base64_string}")  # Debug
     link = f"https://t.me/{client.username}?start={base64_string}"
