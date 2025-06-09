@@ -94,7 +94,7 @@ async def start_command(client: Client, message: Message):
     if len(text) <= 7:
         reply_markup = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("• 𝗠𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
+                [InlineKeyboardButton("• �_M𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
                 [
                     InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
                     InlineKeyboardButton("ʜᴇʟᴘ •", callback_data="help")
@@ -127,11 +127,29 @@ async def start_command(client: Client, message: Message):
     try:
         string = await decode(base64_string)
         print(f"Decoded string: {string}")  # Debug
-        # Process format: get-{channel_id}-{f_msg_id}-{s_msg_id}
+        # Process format: get--channel_id-f_msg_id-s_msg_id or get--channel_id-f_msg_id
         argument = string.split("-")
         print(f"Split arguments: {argument}")  # Debug
-        if len(argument) == 4 and argument[0] == "get":
-            try:
+        if argument[0] != "get":
+            await message.reply_text("Invalid format structure: Missing 'get' prefix")
+            return
+
+        # Handle channel_id (may include negative sign)
+        try:
+            if len(argument) == 5 and argument[1] == "":  # Case: get--channel_id-f_msg_id-s_msg_id
+                channel_id = int(f"-{argument[2]}")
+                f_msg_id = int(argument[3])
+                s_msg_id = int(argument[4])
+                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
+                if f_msg_id <= s_msg_id:
+                    ids = list(range(f_msg_id, s_msg_id + 1))
+                else:
+                    ids = []
+                    i = f_msg_id
+                    while i >= s_msg_id:
+                        ids.append(i)
+                        i -= 1
+            elif len(argument) == 4 and argument[1] != "":  # Case: get-channel_id-f_msg_id-s_msg_id
                 channel_id = int(argument[1])
                 f_msg_id = int(argument[2])
                 s_msg_id = int(argument[3])
@@ -144,20 +162,21 @@ async def start_command(client: Client, message: Message):
                     while i >= s_msg_id:
                         ids.append(i)
                         i -= 1
-            except (ValueError, IndexError) as e:
-                await message.reply_text(f"Error parsing format: {str(e)}")
-                return
-        elif len(argument) == 3 and argument[0] == "get":
-            try:
+            elif len(argument) == 4 and argument[1] == "":  # Case: get--channel_id-f_msg_id
+                channel_id = int(f"-{argument[2]}")
+                f_msg_id = int(argument[3])
+                print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
+                ids = [f_msg_id]
+            elif len(argument) == 3 and argument[1] != "":  # Case: get-channel_id-f_msg_id
                 channel_id = int(argument[1])
                 f_msg_id = int(argument[2])
                 print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
                 ids = [f_msg_id]
-            except (ValueError, IndexError) as e:
-                await message.reply_text(f"Error parsing single ID format: {str(e)}")
+            else:
+                await message.reply_text("Invalid format structure: Incorrect number of arguments")
                 return
-        else:
-            await message.reply_text("Invalid format structure")
+        except (ValueError, IndexError) as e:
+            await message.reply_text(f"Error parsing format: {str(e)}")
             return
 
         # Fetch and process messages
@@ -243,7 +262,7 @@ async def start_command(client: Client, message: Message):
 
             for snt_msg in codeflix_msgs:
                 try:
-                    await snt_msg.delete()
+                    snt_msg.delete()
                 except Exception as e:
                     print(f"Error deleting message {snt_msg.id}: {e}")
 
@@ -268,6 +287,9 @@ async def start_command(client: Client, message: Message):
 
     except ValueError as e:
         await message.reply_text(f"Failed to decode string: {str(e)}")
+
+# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
+# Ask Doubt on telegram @CodeflixSupport
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
