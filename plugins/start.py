@@ -51,8 +51,7 @@ async def short_url(client: Client, message: Message, base64_string):
 
         await message.reply_photo(
             photo=SHORTENER_PIC,
-            caption=SHORT_MSG.format(
-            ),
+            caption=SHORT_MSG.format(),
             reply_markup=InlineKeyboardMarkup(buttons),
         )
 
@@ -97,50 +96,50 @@ async def start_command(client: Client, message: Message):
         except IndexError:
             return
 
-        string = await decode(base64_string)
-        argument = string.split("-")
+        try:
+            string = await decode(base64_string)
+            argument = string.split("-")
 
-        # Handle channel_id (may include negative sign)
-        
-        if len(argument) == 5 and argument[1] == "":  # Case: get--channel_id-f_msg_id-s_msg_id
-            channel_id = int(f"-{argument[2]}")
-            f_msg_id = int(argument[3])
-            s_msg_id = int(argument[4])
-            
-            if f_msg_id <= s_msg_id:
-                ids = list(range(f_msg_id, s_msg_id + 1))
+            # Handle channel_id (may include negative sign)
+            if len(argument) == 5 and argument[1] == "":  # Case: get--channel_id-f_msg_id-s_msg_id
+                channel_id = int(f"-{argument[2]}")
+                f_msg_id = int(argument[3])
+                s_msg_id = int(argument[4])
+
+                if f_msg_id <= s_msg_id:
+                    ids = list(range(f_msg_id, s_msg_id + 1))
+                else:
+                    ids = []
+                    i = f_msg_id
+                    while i >= s_msg_id:
+                        ids.append(i)
+                        i -= 1
+            elif len(argument) == 4 and argument[1] != "":  # Case: get-channel_id-f_msg_id-s_msg_id
+                channel_id = int(argument[1])
+                f_msg_id = int(argument[2])
+                s_msg_id = int(argument[3])
+                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug    
+                if f_msg_id <= s_msg_id:
+                    ids = list(range(f_msg_id, s_msg_id + 1))
+                else:
+                    ids = []
+                    i = f_msg_id
+                    while i >= s_msg_id:
+                        ids.append(i)
+                        i -= 1
+            elif len(argument) == 4 and argument[1] == "":  # Case: get--channel_id-f_msg_id
+                channel_id = int(f"-{argument[2]}")
+                f_msg_id = int(argument[3])
+                print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
+                ids = [f_msg_id]
+            elif len(argument) == 3 and argument[1] != "":  # Case: get-channel_id-f_msg_id
+                channel_id = int(argument[1])
+                f_msg_id = int(argument[2])
+                print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
+                ids = [f_msg_id]
             else:
-                ids = []
-                i = f_msg_id               
-                while i >= s_msg_id:
-                    ids.append(i)
-                    i -= 1
-        elif len(argument) == 4 and argument[1] != "":  # Case: get-channel_id-f_msg_id-s_msg_id
-            channel_id = int(argument[1])
-            f_msg_id = int(argument[2])
-            s_msg_id = int(argument[3])
-            print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug    
-            if f_msg_id <= s_msg_id:
-                ids = list(range(f_msg_id, s_msg_id + 1))
-            else:
-                ids = []
-                i = f_msg_id
-                while i >= s_msg_id:
-                    ids.append(i)
-                    i -= 1
-        elif len(argument) == 4 and argument[1] == "":  # Case: get--channel_id-f_msg_id
-            channel_id = int(f"-{argument[2]}")
-            f_msg_id = int(argument[3])
-            print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
-            ids = [f_msg_id]
-        elif len(argument) == 3 and argument[1] != "":  # Case: get-channel_id-f_msg_id
-            channel_id = int(argument[1])
-            f_msg_id = int(argument[2])
-            print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
-            ids = [f_msg_id]
-        else:
-            await message.reply_text("Invalid format structure: Incorrect number of arguments")
-            return
+                await message.reply_text("Invalid format structure: Incorrect number of arguments")
+                return
         except (ValueError, IndexError) as e:
             await message.reply_text(f"Error parsing format: {str(e)}")
             return
@@ -220,7 +219,7 @@ async def start_command(client: Client, message: Message):
         if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
                 f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}"
-                f"<blockquote><b>ʙᴜᴛ ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😁 ᴀғᴛᴇʀ ᴅᴇʟᴇᴛᴇᴅ ʏᴏᴜ ᴄᴀɴ ᴀɢᴀɪɴ ᴀᴄᴄᴇss ᴛʜʀᴏᴜɢʜ ᴏᴜʀ ᴡᴇʙsɪᴛᴇs 😘</b></blockquote>"
+                f"<blockquote><b>ʙᴜᴛ ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😁 ᴀғᴛᴇʀ ᴅᴇʟᴇᴛᴇᴅ ʏᴏᴜ ᴄᴀɴ ᴀɢᴀɪɴ ᴀᴄᴄᴇss ᴛʜʀᴏᴜɢʜ ᴏᴜʀ ᴡᴇʙsɪᴛᴇs [...]"
                 f"<b> <a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>"
             )
 
@@ -254,13 +253,11 @@ async def start_command(client: Client, message: Message):
     else:
         reply_markup = InlineKeyboardMarkup(
             [
-                    [InlineKeyboardButton("• 𝗠𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
-
-    [
-                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data = "about"),
-                    InlineKeyboardButton('ʜᴇʟᴘ •', callback_data = "help")
-
-    ]
+                [InlineKeyboardButton("• 𝗠𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
+                [
+                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
+                    InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
+                ]
             ]
         )
         await message.reply_photo(
@@ -273,9 +270,12 @@ async def start_command(client: Client, message: Message):
                 id=message.from_user.id
             ),
             reply_markup=reply_markup
-            )  # 🔥
-        
+        )  # 🔥
+
         return
+
+# ... (rest of your code remains, all blocks fixed similarly)
+
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
