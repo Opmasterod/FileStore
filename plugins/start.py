@@ -91,89 +91,56 @@ async def start_command(client: Client, message: Message):
 
     # Handle normal message flow
     text = message.text
-    if len(text) <= 7:
-        reply_markup = InlineKeyboardMarkup(
-            [
-                [InlineKeyboardButton("• �_M𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
-                [
-                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
-                    InlineKeyboardButton("ʜᴇʟᴘ •", callback_data="help")
-                ]
-            ]
-        )
-        await message.reply_photo(
-            photo=START_PIC,
-            caption=START_MSG.format(
-                first=message.from_user.first_name,
-                last=message.from_user.last_name,
-                username=None if not message.from_user.username else '@' + message.from_user.username,
-                mention=message.from_user.mention,
-                id=message.from_user.id
-            ),
-            reply_markup=reply_markup,          
-        )
-        return
-
-    # Extract base64 string
-    try:
-        base64_string = text.split(" ", 1)[1]
-        print(f"Base64 string: {base64_string}")  # Debug
-    except IndexError:
-        await message.reply_text("Welcome to the bot!")
-        return
-
-    # Decode the string
-    try:
-        string = await decode(base64_string)
-        print(f"Decoded string: {string}")  # Debug
-        # Process format: get--channel_id-f_msg_id-s_msg_id or get--channel_id-f_msg_id
-        argument = string.split("-")
-        print(f"Split arguments: {argument}")  # Debug
-        if argument[0] != "get":
-            await message.reply_text("Invalid format structure: Missing 'get' prefix")
+    if len(text) > 7:
+        try:
+            base64_string = text.split(" ", 1)[1]
+        except IndexError:
             return
 
+        string = await decode(base64_string)
+        argument = string.split("-")
+
         # Handle channel_id (may include negative sign)
-        try:
-            if len(argument) == 5 and argument[1] == "":  # Case: get--channel_id-f_msg_id-s_msg_id
-                channel_id = int(f"-{argument[2]}")
-                f_msg_id = int(argument[3])
-                s_msg_id = int(argument[4])
+        
+        if len(argument) == 5 and argument[1] == "":  # Case: get--channel_id-f_msg_id-s_msg_id
+            channel_id = int(f"-{argument[2]}")
+            f_msg_id = int(argument[3])
+            s_msg_id = int(argument[4])
                 print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
-                if f_msg_id <= s_msg_id:
-                    ids = list(range(f_msg_id, s_msg_id + 1))
-                else:
-                    ids = []
-                    i = f_msg_id
-                    while i >= s_msg_id:
-                        ids.append(i)
-                        i -= 1
-            elif len(argument) == 4 and argument[1] != "":  # Case: get-channel_id-f_msg_id-s_msg_id
-                channel_id = int(argument[1])
-                f_msg_id = int(argument[2])
-                s_msg_id = int(argument[3])
-                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
-                if f_msg_id <= s_msg_id:
-                    ids = list(range(f_msg_id, s_msg_id + 1))
-                else:
-                    ids = []
-                    i = f_msg_id
-                    while i >= s_msg_id:
-                        ids.append(i)
-                        i -= 1
-            elif len(argument) == 4 and argument[1] == "":  # Case: get--channel_id-f_msg_id
-                channel_id = int(f"-{argument[2]}")
-                f_msg_id = int(argument[3])
-                print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
-                ids = [f_msg_id]
-            elif len(argument) == 3 and argument[1] != "":  # Case: get-channel_id-f_msg_id
-                channel_id = int(argument[1])
-                f_msg_id = int(argument[2])
-                print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
-                ids = [f_msg_id]
+            if f_msg_id <= s_msg_id:
+                ids = list(range(f_msg_id, s_msg_id + 1))
             else:
-                await message.reply_text("Invalid format structure: Incorrect number of arguments")
-                return
+                ids = []
+                i = f_msg_id               
+                while i >= s_msg_id:
+                    ids.append(i)
+                    i -= 1
+        elif len(argument) == 4 and argument[1] != "":  # Case: get-channel_id-f_msg_id-s_msg_id
+            channel_id = int(argument[1])
+            f_msg_id = int(argument[2])
+            s_msg_id = int(argument[3])
+                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
+            if f_msg_id <= s_msg_id:
+                ids = list(range(f_msg_id, s_msg_id + 1))
+            else:
+                ids = []
+                i = f_msg_id
+                while i >= s_msg_id:
+                    ids.append(i)
+                    i -= 1
+        elif len(argument) == 4 and argument[1] == "":  # Case: get--channel_id-f_msg_id
+            channel_id = int(f"-{argument[2]}")
+            f_msg_id = int(argument[3])
+            print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
+            ids = [f_msg_id]
+        elif len(argument) == 3 and argument[1] != "":  # Case: get-channel_id-f_msg_id
+            channel_id = int(argument[1])
+            f_msg_id = int(argument[2])
+            print(f"Single ID format - channel_id: {channel_id}, f_msg_id: {f_msg_id}")  # Debug
+            ids = [f_msg_id]
+        else:
+            await message.reply_text("Invalid format structure: Incorrect number of arguments")
+            return
         except (ValueError, IndexError) as e:
             await message.reply_text(f"Error parsing format: {str(e)}")
             return
@@ -250,20 +217,21 @@ async def start_command(client: Client, message: Message):
                 await message.reply_text(f"Error copying message: {str(e)}")
                 continue
 
-        if codeflix_msgs and FILE_AUTO_DELETE > 0:
+        if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
-                f"<b>These Lectures/PDFs will be Deleted in {get_exp_time(FILE_AUTO_DELETE)}</b>\n"
-                f"<blockquote><b>But don't worry 😁 after deleted you can again access through our websites 😘</b></blockquote>\n"
-                f"<b><a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>"
+                f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}"
+                f"<blockquote><b>ʙᴜᴛ ᴅᴏɴ'ᴛ ᴡᴏʀʀʏ 😁 ᴀғᴛᴇʀ ᴅᴇʟᴇᴛᴇᴅ ʏᴏᴜ ᴄᴀɴ ᴀɢᴀɪɴ ᴀᴄᴄᴇss ᴛʜʀᴏᴜɢʜ ᴏᴜʀ ᴡᴇʙsɪᴛᴇs 😘</b></blockquote>"
+                f"<b> <a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>"
             )
 
             await asyncio.sleep(FILE_AUTO_DELETE)
 
-            for snt_msg in codeflix_msgs:
-                try:
-                    snt_msg.delete()
-                except Exception as e:
-                    print(f"Error deleting message {snt_msg.id}: {e}")
+            for snt_msg in codeflix_msgs:    
+                if snt_msg:
+                    try:    
+                        await snt_msg.delete()  
+                    except Exception as e:
+                        print(f"Error deleting message {snt_msg.id}: {e}")
 
             try:
                 reload_url = (
@@ -276,16 +244,38 @@ async def start_command(client: Client, message: Message):
                 ) if reload_url else None
 
                 await notification_msg.edit(
-                    "<blockquote><b>Your lectures/PDF is deleted!</b></blockquote>\n"
-                    "<b>Click below button to get your deleted lectures/PDF 👇</b>\n\n"
-                    "<b><a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>",
+                    "<blockquote><b>ʏᴏᴜʀ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ ɪs  ᴅᴇʟᴇᴛᴇᴅ !!\n</b></blockquote>"
+                    "<b>ᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ʟᴇᴄᴛᴜʀᴇs / ᴘᴅғ 👇</b>\n\n"
+                    "<b> <a href=https://yashyasag.github.io/hiddens_officials>🌟 𝗢𝗧𝗛𝗘𝗥 𝗪𝗘𝗕𝗦𝗜𝗧𝗘𝗦 🌟</a></b>",
                     reply_markup=keyboard
                 )
             except Exception as e:
-                print(f"Error updating notification: {e}")
+                print(f"Error updating notification with 'Get File Again' button: {e}")
+    else:
+        reply_markup = InlineKeyboardMarkup(
+            [
+                    [InlineKeyboardButton("• 𝗠𝗔𝗜𝗡 𝗪𝗘𝗕𝗦𝗜𝗧𝗘 •", url="https://yashyasag.github.io/hiddens_officials")],
 
-    except ValueError as e:
-        await message.reply_text(f"Failed to decode string: {str(e)}")
+    [
+                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data = "about"),
+                    InlineKeyboardButton('ʜᴇʟᴘ •', callback_data = "help")
+
+    ]
+            ]
+        )
+        await message.reply_photo(
+            photo=START_PIC,
+            caption=START_MSG.format(
+                first=message.from_user.first_name,
+                last=message.from_user.last_name,
+                username=None if not message.from_user.username else '@' + message.from_user.username,
+                mention=message.from_user.mention,
+                id=message.from_user.id
+            ),
+            reply_markup=reply_markup
+            )  # 🔥
+        
+        return
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
