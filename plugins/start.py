@@ -106,7 +106,7 @@ async def start_command(client: Client, message: Message):
             channel_id = int(f"-{argument[2]}")
             f_msg_id = int(argument[3])
             s_msg_id = int(argument[4])
-                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
+            
             if f_msg_id <= s_msg_id:
                 ids = list(range(f_msg_id, s_msg_id + 1))
             else:
@@ -119,7 +119,7 @@ async def start_command(client: Client, message: Message):
             channel_id = int(argument[1])
             f_msg_id = int(argument[2])
             s_msg_id = int(argument[3])
-                print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug
+            print(f"New format - channel_id: {channel_id}, f_msg_id: {f_msg_id}, s_msg_id: {s_msg_id}")  # Debug    
             if f_msg_id <= s_msg_id:
                 ids = list(range(f_msg_id, s_msg_id + 1))
             else:
