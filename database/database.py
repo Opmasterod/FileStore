@@ -358,4 +358,4 @@ class Rohit:
         return result[0]["total"] if result else 0
 
 
-db = Rohit(DB_URI, DB_NAME)
+db = Rohit(DB_URI, DB_NAME, TG_BOT_TOKEN)
