@@ -6,7 +6,7 @@ import motor.motor_asyncio
 import time
 from typing import Tuple
 import pymongo, os
-from config import DB_URI, DB_NAME
+from config import DB_URI, DB_NAME, TG_BOT_TOKEN
 import logging
 from datetime import datetime, timedelta
 
@@ -39,21 +39,21 @@ def new_user(id):
 
 class Rohit:
 
-    def __init__(self, DB_URI, DB_NAME):
+    def __init__(self, DB_URI, DB_NAME, TG_BOT_TOKEN):
         self.dbclient = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
         self.database = self.dbclient[DB_NAME]
 
-        self.channel_data = self.database['channels']
-        self.admins_data = self.database['admins']
-        self.user_data = self.database['users']
-        self.sex_data = self.database['sex']
-        self.banned_user_data = self.database['banned_user']
-        self.autho_user_data = self.database['autho_user']
-        self.del_timer_data = self.database['del_timer']
-        self.fsub_data = self.database['fsub']   
-        self.rqst_fsub_data = self.database['request_forcesub']
-        self.rqst_fsub_Channel_data = self.database['request_forcesub_channel']
-        self.premium_users = self.database['premium_users']
+        self.channel_data = self.database[f'channels{TG_BOT_TOKEN}']
+        self.admins_data = self.database[f'admins{TG_BOT_TOKEN}']
+        self.user_data = self.database[f'users{TG_BOT_TOKEN}']
+        self.sex_data = self.database[f'sex{TG_BOT_TOKEN}']
+        self.banned_user_data = self.database[f'banned_user{TG_BOT_TOKEN}']
+        self.autho_user_data = self.database[f'autho_user{TG_BOT_TOKEN}']
+        self.del_timer_data = self.database[f'del_timer{TG_BOT_TOKEN}']
+        self.fsub_data = self.database[f'fsub{TG_BOT_TOKEN}']   
+        self.rqst_fsub_data = self.database[f'request_forcesub{TG_BOT_TOKEN}']
+        self.rqst_fsub_Channel_data = self.database[f'request_forcesub_channel{TG_BOT_TOKEN}']
+        self.premium_users = self.database[f'premium_users{TG_BOT_TOKEN}']
         
 
 
